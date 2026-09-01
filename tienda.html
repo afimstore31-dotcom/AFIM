@@ -85,6 +85,38 @@
     height:190px;
     object-fit:cover;
     background:var(--gris-claro);
+    display:block;
+  }
+  .contenedor-imagen{ position:relative; }
+  .flecha-foto{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    background:rgba(0,0,0,0.5);
+    color:var(--blanco);
+    border:none;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:16px;
+    line-height:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .flecha-foto:hover{ background:rgba(0,0,0,0.75); }
+  .flecha-izq{ left:8px; }
+  .flecha-der{ right:8px; }
+  .contador-fotos{
+    position:absolute;
+    bottom:8px;
+    right:8px;
+    background:rgba(0,0,0,0.6);
+    color:var(--blanco);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
   }
   .tarjeta .info{
     padding:14px;
@@ -578,6 +610,12 @@ function renderizarFiltros(){
 // =========================================================
 const contenedorProductos = document.getElementById('contenedorProductos');
 const mensajeVacio = document.getElementById('mensajeVacio');
+let indiceFotoActual = {}; // recuerda qué foto se está mostrando de cada producto
+
+function obtenerFotosProducto(p){
+  if (p.imagenesUrls && p.imagenesUrls.length) return p.imagenesUrls;
+  return p.imagenUrl ? [p.imagenUrl] : [];
+}
 
 function renderizarProductos(){
   const lista = categoriaActiva === 'Todos'
@@ -597,10 +635,23 @@ function renderizarProductos(){
   mensajeVacio.style.display = 'none';
 
   lista.forEach(function(p){
+    const fotos = obtenerFotosProducto(p);
+    const indiceActual = indiceFotoActual[p.id] || 0;
+    const fotoMostrada = fotos[indiceActual] || fotos[0] || '';
+    const tieneVariasFotos = fotos.length > 1;
+
     const tarjeta = document.createElement('div');
     tarjeta.className = 'tarjeta';
+    tarjeta.setAttribute('data-tarjeta-id', p.id);
     tarjeta.innerHTML =
-      '<img src="' + (p.imagenUrl || '') + '" alt="' + escaparHtml(p.nombre) + '">' +
+      '<div class="contenedor-imagen">' +
+        '<img src="' + fotoMostrada + '" alt="' + escaparHtml(p.nombre) + '">' +
+        (tieneVariasFotos ?
+          '<button type="button" class="flecha-foto flecha-izq" data-foto-anterior="' + p.id + '">‹</button>' +
+          '<button type="button" class="flecha-foto flecha-der" data-foto-siguiente="' + p.id + '">›</button>' +
+          '<span class="contador-fotos">' + (indiceActual + 1) + '/' + fotos.length + '</span>'
+          : '') +
+      '</div>' +
       '<div class="info">' +
         '<span class="categoria">' + escaparHtml(p.categoria || '') + '</span>' +
         '<span class="nombre">' + escaparHtml(p.nombre || '') + '</span>' +
@@ -625,6 +676,27 @@ contenedorProductos.addEventListener('click', function(e){
   const idRestar = e.target.getAttribute('data-restar');
   const idAgregar = e.target.getAttribute('data-agregar');
   const idPreguntar = e.target.getAttribute('data-preguntar');
+  const idFotoAnterior = e.target.getAttribute('data-foto-anterior');
+  const idFotoSiguiente = e.target.getAttribute('data-foto-siguiente');
+
+  if (idFotoAnterior || idFotoSiguiente){
+    const idProducto = idFotoAnterior || idFotoSiguiente;
+    const p = productos.find(function(prod){ return prod.id === idProducto; });
+    if (!p) return;
+    const fotos = obtenerFotosProducto(p);
+    if (fotos.length < 2) return;
+    let indice = indiceFotoActual[idProducto] || 0;
+    indice = idFotoAnterior ? (indice - 1 + fotos.length) % fotos.length : (indice + 1) % fotos.length;
+    indiceFotoActual[idProducto] = indice;
+    const tarjetaEl = contenedorProductos.querySelector('[data-tarjeta-id="' + idProducto + '"]');
+    if (tarjetaEl){
+      const imgEl = tarjetaEl.querySelector('img');
+      const contadorEl = tarjetaEl.querySelector('.contador-fotos');
+      if (imgEl) imgEl.src = fotos[indice];
+      if (contadorEl) contadorEl.textContent = (indice + 1) + '/' + fotos.length;
+    }
+    return;
+  }
 
   if (idSumar){
     const span = document.getElementById('cantidad-' + idSumar);
