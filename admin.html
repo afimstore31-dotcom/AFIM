@@ -136,11 +136,22 @@
     flex-direction:column;
     background:var(--blanco);
   }
+  .tarjeta .miniaturas-wrap{ position:relative; }
   .tarjeta img{
     width:100%;
     height:150px;
     object-fit:cover;
     background:var(--gris);
+  }
+  .tarjeta .badge-fotos{
+    position:absolute;
+    bottom:6px;
+    right:6px;
+    background:rgba(0,0,0,0.7);
+    color:var(--blanco);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
   }
   .tarjeta .info{
     padding:10px 12px;
@@ -167,6 +178,53 @@
     padding:0 12px 12px;
   }
   .tarjeta .acciones button{ flex:1; font-size:12px; padding:7px; }
+
+  .galeria-fotos-form{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:8px;
+  }
+  .miniatura-foto{
+    position:relative;
+    width:72px;
+    height:72px;
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--gris-borde);
+  }
+  .miniatura-foto img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .btn-quitar-foto{
+    position:absolute;
+    top:2px;
+    right:2px;
+    background:rgba(0,0,0,0.65);
+    color:var(--blanco);
+    border:none;
+    border-radius:50%;
+    width:20px;
+    height:20px;
+    line-height:18px;
+    font-size:14px;
+    cursor:pointer;
+    padding:0;
+  }
+  .etiqueta-nueva{
+    position:absolute;
+    bottom:0;
+    left:0;
+    right:0;
+    background:rgba(217,4,41,0.85);
+    color:var(--blanco);
+    font-size:9px;
+    text-align:center;
+    padding:1px 0;
+  }
 
   #vacioLista{
     color:#777;
@@ -256,6 +314,35 @@
     text-align:center;
     padding:20px;
   }
+  .panel-resumen{
+    background:var(--gris);
+    border-left:4px solid var(--rojo);
+    border-radius:6px;
+    padding:12px 14px;
+    font-size:13px;
+    margin:4px 0 16px;
+    line-height:1.6;
+  }
+  .panel-resumen strong{ color:var(--negro); }
+  .historial-pagos{
+    margin:10px 0;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    overflow:hidden;
+  }
+  .historial-pagos table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  .historial-pagos th, .historial-pagos td{
+    text-align:left;
+    padding:7px 10px;
+    border-bottom:1px solid var(--gris-borde);
+  }
+  .historial-pagos th{ background:var(--gris); }
+  .historial-pagos tr:last-child td{ border-bottom:none; }
+  .historial-pagos .sin-pagos{ padding:12px; color:#777; text-align:center; }
 
   .filtro-btn{
     background:var(--blanco);
@@ -411,10 +498,10 @@
           <textarea id="campoDescripcion" rows="3"></textarea>
         </div>
         <div class="campo">
-          <label>Foto del producto</label>
-          <input type="file" id="campoImagen" accept="image/*">
-          <p class="ayuda" id="ayudaImagen">Selecciona una imagen (obligatoria al agregar un producto nuevo).</p>
-          <img id="previaImagenActual" src="" alt="" style="max-width:120px; display:none; border-radius:6px; margin-top:6px;">
+          <label>Fotos del producto (hasta 4)</label>
+          <input type="file" id="campoImagen" accept="image/*" multiple>
+          <p class="ayuda" id="ayudaImagen">Selecciona hasta 4 fotos (obligatorio al agregar un producto nuevo). Se ajustan automáticamente para que no pesen mucho.</p>
+          <div id="galeriaFotosForm" class="galeria-fotos-form"></div>
         </div>
         <button type="submit" class="btn btn-primario" id="btnGuardar">Guardar producto</button>
         <button type="button" class="btn btn-secundario" id="btnCancelarEdicion" style="display:none; margin-top:8px;">Cancelar edición</button>
@@ -452,12 +539,30 @@
             <input type="date" id="campoFechaCompra" required>
           </div>
           <div class="campo">
-            <label>Monto del crédito (MXN)</label>
+            <label>Monto del crédito (MXN, sin intereses)</label>
             <input type="number" id="campoMontoCredito" min="0" step="0.01" required>
           </div>
         </div>
+        <div class="fila">
+          <div class="campo">
+            <label>Plazo</label>
+            <select id="campoPlazoCredito" required>
+              <option value="24">24 semanas (interés 28.8%)</option>
+              <option value="36">36 semanas (interés 40%)</option>
+              <option value="48">48 semanas (interés 50%)</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Frecuencia de pago</label>
+            <select id="campoFrecuenciaCredito" required>
+              <option value="semanal">Semanal</option>
+              <option value="quincenal">Quincenal</option>
+            </select>
+          </div>
+        </div>
+        <div class="panel-resumen" id="resumenCredito">Escribe el monto para ver el resumen del crédito.</div>
         <button type="submit" class="btn btn-primario" id="btnGuardarCredito">Registrar crédito</button>
-        <p class="ayuda">El crédito se guarda como "Pendiente" hasta que alguien confirme, desde la lista de abajo, que el cliente lo aceptó.</p>
+        <p class="ayuda" style="margin-top:10px;">El crédito se guarda como "Pendiente" hasta que alguien confirme, desde la lista de abajo, que el cliente lo aceptó.</p>
         <p id="mensajeCredito" style="font-size:13px; margin-top:8px;"></p>
       </form>
     </div>
@@ -611,34 +716,85 @@ const campoCategoria = document.getElementById('campoCategoria');
 const campoPrecio = document.getElementById('campoPrecio');
 const campoDescripcion = document.getElementById('campoDescripcion');
 const campoImagen = document.getElementById('campoImagen');
-const previaImagenActual = document.getElementById('previaImagenActual');
+const galeriaFotosForm = document.getElementById('galeriaFotosForm');
 const tituloFormulario = document.getElementById('tituloFormulario');
 const btnGuardar = document.getElementById('btnGuardar');
 const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
 const mensajeFormulario = document.getElementById('mensajeFormulario');
 const ayudaImagen = document.getElementById('ayudaImagen');
 
-let imagenActualUrl = '';
+// Hasta 4 fotos por producto. Cada una se comprime y se guarda como texto
+// (base64) directo en el documento de Firestore, para no usar Storage. Por
+// eso el límite por foto es más chico que antes: así entran varias sin
+// pasarse del tamaño máximo que permite un documento de Firestore (1 MB).
+const MAX_FOTOS_PRODUCTO = 4;
+const LIMITE_CARACTERES_FOTO = 200000;
+
+let fotosExistentes = []; // fotos ya guardadas en Firestore (al editar), en base64
+let archivosNuevosSeleccionados = []; // archivos elegidos ahora, pendientes de subir
 
 function limpiarFormulario(){
   campoId.value = '';
   formProducto.reset();
-  previaImagenActual.style.display = 'none';
-  previaImagenActual.src = '';
-  imagenActualUrl = '';
+  fotosExistentes = [];
+  archivosNuevosSeleccionados = [];
+  campoImagen.value = '';
+  renderizarGaleriaFormulario();
   tituloFormulario.textContent = 'Agregar producto';
   btnGuardar.textContent = 'Guardar producto';
   btnCancelarEdicion.style.display = 'none';
-  ayudaImagen.textContent = 'Selecciona una imagen (obligatoria al agregar un producto nuevo). Se ajusta automáticamente para que no pese mucho.';
+  ayudaImagen.textContent = 'Selecciona hasta ' + MAX_FOTOS_PRODUCTO + ' fotos (obligatorio al agregar un producto nuevo). Se ajustan automáticamente para que no pesen mucho.';
   mensajeFormulario.textContent = '';
 }
 
 btnCancelarEdicion.addEventListener('click', limpiarFormulario);
 
-// Convierte la foto elegida en una imagen comprimida (JPEG) en formato
-// base64, lista para guardarse como texto dentro del documento de Firestore.
-// Así evitamos usar Firebase Storage (que ahora pide el plan de pago Blaze).
-function procesarImagen(archivo){
+function crearMiniaturaFoto(url, esNueva, alEliminar){
+  const contenedor = document.createElement('div');
+  contenedor.className = 'miniatura-foto';
+  contenedor.innerHTML = '<img src="' + url + '">' + (esNueva ? '<span class="etiqueta-nueva">Nueva</span>' : '');
+  const botonQuitar = document.createElement('button');
+  botonQuitar.type = 'button';
+  botonQuitar.className = 'btn-quitar-foto';
+  botonQuitar.textContent = '×';
+  botonQuitar.title = 'Quitar esta foto';
+  botonQuitar.addEventListener('click', alEliminar);
+  contenedor.appendChild(botonQuitar);
+  return contenedor;
+}
+
+function renderizarGaleriaFormulario(){
+  galeriaFotosForm.innerHTML = '';
+  fotosExistentes.forEach(function(url, indice){
+    galeriaFotosForm.appendChild(crearMiniaturaFoto(url, false, function(){
+      fotosExistentes.splice(indice, 1);
+      renderizarGaleriaFormulario();
+    }));
+  });
+  archivosNuevosSeleccionados.forEach(function(archivo, indice){
+    galeriaFotosForm.appendChild(crearMiniaturaFoto(URL.createObjectURL(archivo), true, function(){
+      archivosNuevosSeleccionados.splice(indice, 1);
+      renderizarGaleriaFormulario();
+    }));
+  });
+}
+
+campoImagen.addEventListener('change', function(){
+  const espacioDisponible = MAX_FOTOS_PRODUCTO - fotosExistentes.length - archivosNuevosSeleccionados.length;
+  let seleccionados = Array.from(campoImagen.files);
+  if (seleccionados.length > espacioDisponible){
+    alert('Solo puedes agregar ' + Math.max(espacioDisponible, 0) + ' foto(s) más (máximo ' + MAX_FOTOS_PRODUCTO + ' por producto). Se tomaron las primeras.');
+    seleccionados = seleccionados.slice(0, Math.max(espacioDisponible, 0));
+  }
+  archivosNuevosSeleccionados = archivosNuevosSeleccionados.concat(seleccionados);
+  campoImagen.value = ''; // para poder volver a abrir el selector y agregar más después
+  renderizarGaleriaFormulario();
+});
+
+// Convierte una foto en una imagen comprimida (JPEG) en formato base64,
+// lista para guardarse como texto dentro del documento de Firestore.
+// Así evitamos usar Firebase Storage (que pide el plan de pago Blaze).
+function procesarFoto(archivo, limiteCaracteres){
   return new Promise(function(resolve, reject){
     const lector = new FileReader();
     lector.onload = function(e){
@@ -657,20 +813,19 @@ function procesarImagen(archivo){
           canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
           return canvas.toDataURL('image/jpeg', calidad);
         }
-        let resultado = generar(0.72, 800);
-        if (resultado.length > 700000){
-          resultado = generar(0.5, 600);
-        }
-        if (resultado.length > 700000){
-          reject(new Error('La foto sigue pesando demasiado incluso comprimida. Intenta con otra imagen de menor resolución.'));
+        let resultado = generar(0.7, 700);
+        if (resultado.length > limiteCaracteres) resultado = generar(0.5, 550);
+        if (resultado.length > limiteCaracteres) resultado = generar(0.35, 420);
+        if (resultado.length > limiteCaracteres){
+          reject(new Error('La foto "' + archivo.name + '" sigue pesando demasiado incluso comprimida. Intenta con otra imagen.'));
           return;
         }
         resolve(resultado);
       };
-      img.onerror = function(){ reject(new Error('No se pudo leer la imagen seleccionada.')); };
+      img.onerror = function(){ reject(new Error('No se pudo leer la imagen "' + archivo.name + '".')); };
       img.src = e.target.result;
     };
-    lector.onerror = function(){ reject(new Error('No se pudo leer el archivo seleccionado.')); };
+    lector.onerror = function(){ reject(new Error('No se pudo leer el archivo "' + archivo.name + '".')); };
     lector.readAsDataURL(archivo);
   });
 }
@@ -680,10 +835,10 @@ formProducto.addEventListener('submit', function(e){
   mensajeFormulario.textContent = '';
 
   const id = campoId.value;
-  const archivo = campoImagen.files[0];
+  const totalFotos = fotosExistentes.length + archivosNuevosSeleccionados.length;
 
-  if (!id && !archivo){
-    mensajeFormulario.textContent = 'Debes seleccionar una foto para el producto.';
+  if (!id && totalFotos === 0){
+    mensajeFormulario.textContent = 'Debes seleccionar al menos una foto para el producto.';
     mensajeFormulario.style.color = 'var(--rojo)';
     return;
   }
@@ -698,17 +853,16 @@ formProducto.addEventListener('submit', function(e){
     descripcion: campoDescripcion.value.trim()
   };
 
-  const promesaImagen = archivo ? procesarImagen(archivo) : Promise.resolve(null);
-
-  promesaImagen.then(function(imagenBase64){
+  Promise.all(archivosNuevosSeleccionados.map(function(archivo){
+    return procesarFoto(archivo, LIMITE_CARACTERES_FOTO);
+  })).then(function(nuevasBase64){
     const datos = Object.assign({}, datosBase);
-
-    if (imagenBase64){
-      datos.imagenUrl = imagenBase64;
-    }
+    const todasLasFotos = fotosExistentes.concat(nuevasBase64).slice(0, MAX_FOTOS_PRODUCTO);
+    datos.imagenesUrls = todasLasFotos;
+    datos.imagenUrl = todasLasFotos[0] || ''; // se conserva para compatibilidad con el carrito
 
     if (id){
-      // EDITAR producto existente (si no se eligió foto nueva, se conserva la actual)
+      // EDITAR producto existente
       return db.collection('productos').doc(id).update(datos);
     } else {
       // AGREGAR producto nuevo
@@ -722,7 +876,7 @@ formProducto.addEventListener('submit', function(e){
   }).catch(function(error){
     console.error(error);
     mensajeFormulario.style.color = 'var(--rojo)';
-    mensajeFormulario.textContent = 'Ocurrió un error al guardar el producto.';
+    mensajeFormulario.textContent = (error && error.message) ? error.message : 'Ocurrió un error al guardar el producto.';
   }).finally(function(){
     btnGuardar.disabled = false;
     if (btnGuardar.textContent === 'Guardando...') btnGuardar.textContent = 'Guardar producto';
@@ -754,10 +908,14 @@ function renderizarListaProductos(lista){
   vacioLista.style.display = 'none';
 
   lista.forEach(function(p){
+    const cantidadFotos = (p.imagenesUrls && p.imagenesUrls.length) ? p.imagenesUrls.length : (p.imagenUrl ? 1 : 0);
     const tarjeta = document.createElement('div');
     tarjeta.className = 'tarjeta';
     tarjeta.innerHTML =
-      '<img src="' + (p.imagenUrl || '') + '" alt="' + escaparHtml(p.nombre) + '">' +
+      '<div class="miniaturas-wrap">' +
+        '<img src="' + (p.imagenUrl || '') + '" alt="' + escaparHtml(p.nombre) + '">' +
+        (cantidadFotos > 1 ? '<span class="badge-fotos">' + cantidadFotos + ' fotos</span>' : '') +
+      '</div>' +
       '<div class="info">' +
         '<span class="categoria">' + escaparHtml(p.categoria || '') + '</span>' +
         '<span class="nombre">' + escaparHtml(p.nombre || '') + '</span>' +
@@ -809,15 +967,14 @@ listaProductos.addEventListener('click', function(e){
       campoCategoria.value = p.categoria || '';
       campoPrecio.value = p.precio || 0;
       campoDescripcion.value = p.descripcion || '';
-      imagenActualUrl = p.imagenUrl || '';
-      if (imagenActualUrl){
-        previaImagenActual.src = imagenActualUrl;
-        previaImagenActual.style.display = 'block';
-      }
+      fotosExistentes = (p.imagenesUrls && p.imagenesUrls.length) ? p.imagenesUrls.slice() : (p.imagenUrl ? [p.imagenUrl] : []);
+      archivosNuevosSeleccionados = [];
+      campoImagen.value = '';
+      renderizarGaleriaFormulario();
       tituloFormulario.textContent = 'Editar producto';
       btnGuardar.textContent = 'Guardar cambios';
       btnCancelarEdicion.style.display = 'inline-block';
-      ayudaImagen.textContent = 'Deja este campo vacío si no quieres cambiar la foto actual.';
+      ayudaImagen.textContent = 'Puedes agregar más fotos o quitar las que no quieras con la "×" (máximo ' + MAX_FOTOS_PRODUCTO + ').';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
@@ -851,6 +1008,9 @@ const campoClienteNombre = document.getElementById('campoClienteNombre');
 const campoClienteDireccion = document.getElementById('campoClienteDireccion');
 const campoFechaCompra = document.getElementById('campoFechaCompra');
 const campoMontoCredito = document.getElementById('campoMontoCredito');
+const campoPlazoCredito = document.getElementById('campoPlazoCredito');
+const campoFrecuenciaCredito = document.getElementById('campoFrecuenciaCredito');
+const resumenCredito = document.getElementById('resumenCredito');
 const btnGuardarCredito = document.getElementById('btnGuardarCredito');
 const mensajeCredito = document.getElementById('mensajeCredito');
 const listaCreditos = document.getElementById('listaCreditos');
@@ -859,6 +1019,46 @@ let dejarDeEscucharCreditos = null;
 let creditosCache = [];
 let filtroEstadoActivo = 'todos';
 let creditoDesdeChatId = null; // si viene de un chat, el crédito nace ya 'aceptado'
+
+// Plazos disponibles y su interés total (no anual: es el interés fijo de todo el plazo)
+const PLAZOS_CREDITO = { 24: 0.288, 36: 0.40, 48: 0.50 };
+const ETIQUETAS_FRECUENCIA = { semanal: 'semanal', quincenal: 'quincenal' };
+
+function calcularResumenCredito(){
+  const monto = parseFloat(campoMontoCredito.value);
+  const plazoSemanas = parseInt(campoPlazoCredito.value, 10);
+  const frecuencia = campoFrecuenciaCredito.value;
+  const tasa = PLAZOS_CREDITO[plazoSemanas];
+
+  if (!(monto > 0) || !tasa){
+    return null;
+  }
+
+  const interes = monto * tasa;
+  const montoTotal = monto + interes;
+  const numeroPagos = frecuencia === 'quincenal' ? Math.round(plazoSemanas / 2) : plazoSemanas;
+  const cuotaSugerida = montoTotal / numeroPagos;
+
+  return { monto: monto, plazoSemanas: plazoSemanas, tasa: tasa, frecuencia: frecuencia, interes: interes, montoTotal: montoTotal, numeroPagos: numeroPagos, cuotaSugerida: cuotaSugerida };
+}
+
+function actualizarResumenCredito(){
+  const r = calcularResumenCredito();
+  if (!r){
+    resumenCredito.textContent = 'Escribe el monto para ver el resumen del crédito.';
+    return;
+  }
+  resumenCredito.innerHTML =
+    'Interés (' + (r.tasa * 100).toFixed(1) + '%): <strong>' + formatearPrecio(r.interes) + '</strong><br>' +
+    'Total a pagar: <strong>' + formatearPrecio(r.montoTotal) + '</strong><br>' +
+    'Número de pagos (' + ETIQUETAS_FRECUENCIA[r.frecuencia] + '): <strong>' + r.numeroPagos + '</strong><br>' +
+    'Cuota sugerida: <strong>' + formatearPrecio(r.cuotaSugerida) + '</strong> por pago ' + ETIQUETAS_FRECUENCIA[r.frecuencia] + '.';
+}
+
+[campoMontoCredito, campoPlazoCredito, campoFrecuenciaCredito].forEach(function(el){
+  el.addEventListener('input', actualizarResumenCredito);
+  el.addEventListener('change', actualizarResumenCredito);
+});
 
 function formatearFecha(fechaTexto){
   if (!fechaTexto) return 'Sin fecha';
@@ -875,8 +1075,8 @@ formCredito.addEventListener('submit', function(e){
   e.preventDefault();
   mensajeCredito.textContent = '';
 
-  const monto = parseFloat(campoMontoCredito.value);
-  if (!(monto > 0)){
+  const resumen = calcularResumenCredito();
+  if (!resumen){
     mensajeCredito.style.color = 'var(--rojo)';
     mensajeCredito.textContent = 'El monto del crédito debe ser mayor a 0.';
     return;
@@ -887,8 +1087,15 @@ formCredito.addEventListener('submit', function(e){
     cliente: campoClienteNombre.value.trim(),
     direccion: campoClienteDireccion.value.trim(),
     fechaCompra: campoFechaCompra.value,
-    montoCredito: monto,
-    saldoActual: monto,
+    montoCredito: resumen.monto,
+    plazoSemanas: resumen.plazoSemanas,
+    tasaInteres: resumen.tasa,
+    frecuenciaPago: resumen.frecuencia,
+    interes: resumen.interes,
+    montoTotal: resumen.montoTotal,
+    numeroPagos: resumen.numeroPagos,
+    cuotaSugerida: resumen.cuotaSugerida,
+    saldoActual: resumen.montoTotal,
     pagos: [],
     creado: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -911,7 +1118,7 @@ formCredito.addEventListener('submit', function(e){
     return db.collection('chats').doc(idChatOrigen).update({ creditoId: refCredito.id }).then(function(){
       return db.collection('chats').doc(idChatOrigen).collection('mensajes').add({
         autor: 'admin',
-        texto: 'Tu crédito por ' + formatearPrecio(monto) + ' fue registrado y aceptado. ¡Gracias por tu compra!',
+        texto: 'Tu crédito por ' + formatearPrecio(resumen.montoTotal) + ' (a ' + resumen.numeroPagos + ' pagos ' + ETIQUETAS_FRECUENCIA[resumen.frecuencia] + 's) fue registrado y aceptado. ¡Gracias por tu compra!',
         nombreAutor: correoAdminActual(),
         fecha: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -922,6 +1129,7 @@ formCredito.addEventListener('submit', function(e){
       ? 'Crédito creado y marcado como aceptado, ligado a la conversación.'
       : 'Crédito registrado correctamente como "Pendiente".';
     formCredito.reset();
+    actualizarResumenCredito();
   }).catch(function(error){
     console.error(error);
     mensajeCredito.style.color = 'var(--rojo)';
@@ -949,11 +1157,12 @@ function renderizarCreditos(){
   vacioCreditos.style.display = 'none';
 
   lista.forEach(function(c){
-    const pagos = c.pagos || [];
+    const pagos = (c.pagos || []).slice().sort(function(a, b){ return (a.registrado || 0) - (b.registrado || 0); });
     const ultimaCuota = pagos.length ? pagos[pagos.length - 1] : null;
     const estado = c.estado || 'pendiente';
     const liquidado = estado === 'aceptado' && Number(c.saldoActual || 0) <= 0;
     const badgeEstado = '<span class="badge-estado ' + estado + '">' + (etiquetasEstado[estado] || 'Pendiente') + '</span>';
+    const tienePlan = c.plazoSemanas && c.frecuenciaPago;
 
     let botonesEstado = '';
     if (estado === 'pendiente'){
@@ -972,6 +1181,12 @@ function renderizarCreditos(){
         '</form>';
     }
 
+    const infoPlanHtml = tienePlan
+      ? '<div><strong>Plazo:</strong> ' + c.plazoSemanas + ' semanas (' + ETIQUETAS_FRECUENCIA[c.frecuenciaPago] + '), interés ' + (Number(c.tasaInteres || 0) * 100).toFixed(1) + '%</div>' +
+        '<div><strong>Total a pagar (con interés):</strong> ' + formatearPrecio(c.montoTotal) + '</div>' +
+        '<div><strong>Cuota sugerida:</strong> ' + formatearPrecio(c.cuotaSugerida) + ' (' + pagos.length + ' de ' + c.numeroPagos + ' pagos hechos)</div>'
+      : '<div class="ayuda" style="margin:0;">Este crédito no tiene plazo/interés definido (se registró antes de esta actualización).</div>';
+
     const tarjeta = document.createElement('div');
     tarjeta.className = 'tarjeta-credito';
     tarjeta.innerHTML =
@@ -979,7 +1194,8 @@ function renderizarCreditos(){
         '<div><strong>Cliente:</strong> ' + escaparHtml(c.cliente) + badgeEstado + (liquidado ? '<span class="badge-liquidado">Liquidado</span>' : '') + '</div>' +
         '<div><strong>Dirección:</strong> ' + escaparHtml(c.direccion) + '</div>' +
         '<div><strong>Fecha de compra:</strong> ' + formatearFecha(c.fechaCompra) + '</div>' +
-        '<div><strong>Monto del crédito:</strong> ' + formatearPrecio(c.montoCredito) + '</div>' +
+        '<div><strong>Monto del crédito (sin interés):</strong> ' + formatearPrecio(c.montoCredito) + '</div>' +
+        infoPlanHtml +
         '<div><strong>Saldo actual:</strong> ' + formatearPrecio(c.saldoActual) + '</div>' +
         '<div><strong>Última cuota:</strong> ' + (ultimaCuota ? (formatearPrecio(ultimaCuota.monto) + ' el ' + formatearFecha(ultimaCuota.fecha)) : 'Sin pagos aún') + '</div>' +
         '<div><strong>Registrado por:</strong> ' + escaparHtml(c.registradoPor || 'Desconocido') + '</div>' +
@@ -988,9 +1204,28 @@ function renderizarCreditos(){
       '</div>' +
       (botonesEstado ? '<div class="acciones-credito">' + botonesEstado + '</div>' : '') +
       formPagoHtml +
+      '<button type="button" class="btn btn-secundario" data-ver-historial="' + c.id + '">Ver historial de pagos (' + pagos.length + ')</button>' +
+      '<div class="historial-pagos" id="historial-' + c.id + '" style="display:none;">' + construirHistorialPagosHtml(pagos) + '</div>' +
       '<button type="button" class="btn btn-peligro" data-borrar-credito="' + c.id + '">Eliminar crédito</button>';
     listaCreditos.appendChild(tarjeta);
   });
+}
+
+function construirHistorialPagosHtml(pagos){
+  if (!pagos.length){
+    return '<p class="sin-pagos">Este cliente todavía no ha realizado pagos.</p>';
+  }
+  let filas = '';
+  pagos.forEach(function(p, indice){
+    filas +=
+      '<tr>' +
+        '<td>' + (indice + 1) + '</td>' +
+        '<td>' + formatearFecha(p.fecha) + '</td>' +
+        '<td>' + formatearPrecio(p.monto) + '</td>' +
+        '<td>' + escaparHtml(p.registradoPor || 'Desconocido') + '</td>' +
+      '</tr>';
+  });
+  return '<table><thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Registrado por</th></tr></thead><tbody>' + filas + '</tbody></table>';
 }
 
 document.querySelectorAll('.filtro-btn').forEach(function(boton){
@@ -1049,6 +1284,17 @@ listaCreditos.addEventListener('click', function(e){
   const idAceptar = e.target.getAttribute('data-aceptar');
   const idRechazar = e.target.getAttribute('data-rechazar');
   const idBorrar = e.target.getAttribute('data-borrar-credito');
+  const idHistorial = e.target.getAttribute('data-ver-historial');
+
+  if (idHistorial){
+    const panel = document.getElementById('historial-' + idHistorial);
+    if (panel){
+      const abierto = panel.style.display !== 'none';
+      panel.style.display = abierto ? 'none' : 'block';
+      e.target.textContent = e.target.textContent.replace(abierto ? 'Ocultar' : 'Ver', abierto ? 'Ver' : 'Ocultar');
+    }
+    return;
+  }
 
   if (idAceptar){
     db.collection('creditos').doc(idAceptar).update({
@@ -1283,8 +1529,11 @@ btnCrearCreditoDesdeChat.addEventListener('click', function(){
   campoClienteDireccion.value = '';
   campoFechaCompra.value = new Date().toISOString().slice(0, 10);
   campoMontoCredito.value = '';
+  campoPlazoCredito.value = '24';
+  campoFrecuenciaCredito.value = 'semanal';
+  actualizarResumenCredito();
   mensajeCredito.style.color = 'var(--negro)';
-  mensajeCredito.textContent = 'Completa la dirección y el monto, y guarda: este crédito se creará ya como "Aceptado", ligado a la conversación con ' + (chatAbiertoData.nombreCliente || 'el cliente') + '.';
+  mensajeCredito.textContent = 'Completa la dirección, el monto y el plazo, y guarda: este crédito se creará ya como "Aceptado", ligado a la conversación con ' + (chatAbiertoData.nombreCliente || 'el cliente') + '.';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 </script>
