@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administración de Productos</title>
+<style>
+  :root{
+    --negro:#111111;
+    --rojo:#d90429;
+    --rojo-oscuro:#a30320;
+    --blanco:#ffffff;
+    --gris:#f2f2f2;
+    --gris-borde:#ddd;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--gris);
+    color:var(--negro);
+  }
+  header{
+    background:var(--negro);
+    color:var(--blanco);
+    padding:16px 24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  header h1{
+    margin:0;
+    font-size:20px;
+  }
+  header button{
+    background:var(--rojo);
+    color:var(--blanco);
+    border:none;
+    padding:8px 16px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+  }
+  header button:hover{ background:var(--rojo-oscuro); }
+
+  #pantallaLogin{
+    max-width:360px;
+    margin:80px auto;
+    background:var(--blanco);
+    padding:32px;
+    border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+  }
+  #pantallaLogin h2{
+    margin-top:0;
+    text-align:center;
+  }
+  .campo{
+    margin-bottom:14px;
+  }
+  .campo label{
+    display:block;
+    margin-bottom:4px;
+    font-size:14px;
+    font-weight:bold;
+  }
+  .campo input,
+  .campo textarea,
+  .campo select{
+    width:100%;
+    padding:9px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  .btn{
+    display:inline-block;
+    border:none;
+    padding:10px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+    font-weight:bold;
+  }
+  .btn-primario{ background:var(--rojo); color:var(--blanco); width:100%; }
+  .btn-primario:hover{ background:var(--rojo-oscuro); }
+  .btn-secundario{ background:var(--gris-borde); color:var(--negro); }
+  .btn-peligro{ background:var(--rojo); color:var(--blanco); }
+  .btn-peligro:hover{ background:var(--rojo-oscuro); }
+  .btn:disabled{ opacity:0.6; cursor:not-allowed; }
+
+  #mensajeError{
+    color:var(--rojo);
+    font-size:13px;
+    text-align:center;
+    min-height:16px;
+  }
+
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:24px;
+    display:none;
+  }
+  .panel{
+    background:var(--blanco);
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:24px;
+    box-shadow:0 1px 4px rgba(0,0,0,0.08);
+  }
+  .panel h2{
+    margin-top:0;
+    font-size:18px;
+    border-bottom:2px solid var(--rojo);
+    padding-bottom:8px;
+  }
+  .fila{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .fila .campo{ flex:1; min-width:180px; }
+
+  #listaProductos{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
+    gap:16px;
+  }
+  .tarjeta{
+    border:1px solid var(--gris-borde);
+    border-radius:8px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    background:var(--blanco);
+  }
+  .tarjeta img{
+    width:100%;
+    height:150px;
+    object-fit:cover;
+    background:var(--gris);
+  }
+  .tarjeta .info{
+    padding:10px 12px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .tarjeta .categoria{
+    display:inline-block;
+    background:var(--negro);
+    color:var(--blanco);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+    align-self:flex-start;
+  }
+  .tarjeta .nombre{ font-weight:bold; font-size:15px; }
+  .tarjeta .precio{ color:var(--rojo); font-weight:bold; }
+  .tarjeta .descripcion{ font-size:12px; color:#555; flex:1; }
+  .tarjeta .acciones{
+    display:flex;
+    gap:8px;
+    padding:0 12px 12px;
+  }
+  .tarjeta .acciones button{ flex:1; font-size:12px; padding:7px; }
+
+  #vacioLista{
+    color:#777;
+    text-align:center;
+    padding:20px;
+  }
+  .ayuda{
+    font-size:12px;
+    color:#777;
+    margin-top:-8px;
+    margin-bottom:14px;
+  }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  .tab-btn{
+    background:var(--blanco);
+    border:2px solid var(--negro);
+    color:var(--negro);
+    padding:8px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:14px;
+  }
+  .tab-btn.activo{
+    background:var(--negro);
+    color:var(--blanco);
+  }
+  .vista{ display:none; }
+  .vista.activa{ display:block; }
+
+  #buscarProducto{
+    width:100%;
+    padding:9px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:14px;
+    margin-bottom:16px;
+  }
+
+  .tarjeta-credito{
+    border:1px solid var(--gris-borde);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    background:var(--blanco);
+  }
+  .info-credito{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
+    gap:6px;
+    font-size:14px;
+    margin-bottom:12px;
+  }
+  .badge-liquidado{
+    display:inline-block;
+    background:#1a7d1a;
+    color:var(--blanco);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-left:6px;
+  }
+  .form-pago{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .form-pago input{
+    flex:1;
+    min-width:140px;
+    padding:8px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .form-pago button{ white-space:nowrap; }
+  #vacioCreditos{
+    color:#777;
+    text-align:center;
+    padding:20px;
+  }
+
+  .filtro-btn{
+    background:var(--blanco);
+    border:2px solid var(--negro);
+    color:var(--negro);
+    padding:6px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:13px;
+  }
+  .filtro-btn.activo{
+    background:var(--negro);
+    color:var(--blanco);
+  }
+  .badge-estado{
+    display:inline-block;
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+    color:var(--blanco);
+    margin-left:4px;
+  }
+  .badge-estado.pendiente{ background:#b8860b; }
+  .badge-estado.aceptado{ background:#1a7d1a; }
+  .badge-estado.rechazado{ background:var(--rojo); }
+  .acciones-credito{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+
+  .filtro-btn-chat{
+    background:var(--blanco);
+    border:2px solid var(--negro);
+    color:var(--negro);
+    padding:6px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:13px;
+  }
+  .filtro-btn-chat.activo{
+    background:var(--negro);
+    color:var(--blanco);
+  }
+  #vacioChats{
+    color:#777;
+    text-align:center;
+    padding:20px;
+  }
+  #formRespuestaChat{ align-items:stretch; }
+  #formRespuestaChat input{ flex:1; }
+  .mensajes-chat{
+    max-height:380px;
+    min-height:120px;
+    overflow-y:auto;
+    border:1px solid var(--gris-borde);
+    border-radius:8px;
+    padding:12px;
+    background:var(--gris);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .burbuja{
+    max-width:78%;
+    padding:8px 12px;
+    border-radius:10px;
+    font-size:13px;
+    line-height:1.4;
+    word-wrap:break-word;
+    white-space:pre-line;
+  }
+  .burbuja.cliente{
+    align-self:flex-start;
+    background:var(--blanco);
+    border:1px solid var(--gris-borde);
+  }
+  .burbuja.admin{
+    align-self:flex-end;
+    background:var(--negro);
+    color:var(--blanco);
+  }
+  .burbuja .autor{
+    display:block;
+    font-size:10px;
+    opacity:0.7;
+    margin-bottom:2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================================================= -->
+<!-- PANTALLA DE LOGIN                                        -->
+<!-- ======================================================= -->
+<div id="pantallaLogin">
+  <h2>Panel de Administración</h2>
+  <form id="formLogin">
+    <div class="campo">
+      <label>Correo</label>
+      <input type="email" id="loginCorreo" required>
+    </div>
+    <div class="campo">
+      <label>Contraseña</label>
+      <input type="password" id="loginPassword" required>
+    </div>
+    <p id="mensajeError"></p>
+    <button type="submit" class="btn btn-primario">Entrar</button>
+  </form>
+</div>
+
+<!-- ======================================================= -->
+<!-- PANEL PRINCIPAL (solo visible ya logueado)               -->
+<!-- ======================================================= -->
+<header id="cabecera" style="display:none;">
+  <h1>Administración de Productos</h1>
+  <button id="btnCerrarSesion">Cerrar sesión</button>
+</header>
+
+<main id="pantallaAdmin">
+
+  <div class="tabs">
+    <button type="button" class="tab-btn" data-vista="vistaProductos">Productos</button>
+    <button type="button" class="tab-btn" id="tabBotonChats" data-vista="vistaChats">Chats</button>
+    <button type="button" class="tab-btn" data-vista="vistaCreditos">Créditos</button>
+  </div>
+
+  <div id="vistaProductos" class="vista">
+
+    <div class="panel">
+      <h2 id="tituloFormulario">Agregar producto</h2>
+      <form id="formProducto">
+        <input type="hidden" id="productoId">
+        <div class="fila">
+          <div class="campo">
+            <label>Nombre</label>
+            <input type="text" id="campoNombre" required>
+          </div>
+          <div class="campo">
+            <label>Categoría</label>
+            <input type="text" id="campoCategoria" placeholder="Ej: Ropa, Electrónica" required>
+          </div>
+          <div class="campo">
+            <label>Precio (MXN)</label>
+            <input type="number" id="campoPrecio" min="0" step="0.01" required>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Descripción</label>
+          <textarea id="campoDescripcion" rows="3"></textarea>
+        </div>
+        <div class="campo">
+          <label>Foto del producto</label>
+          <input type="file" id="campoImagen" accept="image/*">
+          <p class="ayuda" id="ayudaImagen">Selecciona una imagen (obligatoria al agregar un producto nuevo).</p>
+          <img id="previaImagenActual" src="" alt="" style="max-width:120px; display:none; border-radius:6px; margin-top:6px;">
+        </div>
+        <button type="submit" class="btn btn-primario" id="btnGuardar">Guardar producto</button>
+        <button type="button" class="btn btn-secundario" id="btnCancelarEdicion" style="display:none; margin-top:8px;">Cancelar edición</button>
+        <p id="mensajeFormulario" style="font-size:13px; margin-top:8px;"></p>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Productos publicados</h2>
+      <input type="text" id="buscarProducto" placeholder="Buscar producto por nombre o categoría...">
+      <div id="listaProductos"></div>
+      <p id="vacioLista" style="display:none;">Todavía no has agregado ningún producto.</p>
+    </div>
+
+  </div>
+
+  <div id="vistaCreditos" class="vista">
+
+    <div class="panel">
+      <h2>Registrar nuevo crédito</h2>
+      <form id="formCredito">
+        <div class="fila">
+          <div class="campo">
+            <label>Nombre del cliente</label>
+            <input type="text" id="campoClienteNombre" required>
+          </div>
+          <div class="campo">
+            <label>Dirección</label>
+            <input type="text" id="campoClienteDireccion" required>
+          </div>
+        </div>
+        <div class="fila">
+          <div class="campo">
+            <label>Fecha de compra</label>
+            <input type="date" id="campoFechaCompra" required>
+          </div>
+          <div class="campo">
+            <label>Monto del crédito (MXN)</label>
+            <input type="number" id="campoMontoCredito" min="0" step="0.01" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primario" id="btnGuardarCredito">Registrar crédito</button>
+        <p class="ayuda">El crédito se guarda como "Pendiente" hasta que alguien confirme, desde la lista de abajo, que el cliente lo aceptó.</p>
+        <p id="mensajeCredito" style="font-size:13px; margin-top:8px;"></p>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Créditos activos</h2>
+      <div class="tabs">
+        <button type="button" class="filtro-btn activo" data-estado="todos">Todos</button>
+        <button type="button" class="filtro-btn" data-estado="pendiente">Pendientes</button>
+        <button type="button" class="filtro-btn" data-estado="aceptado">Aceptados</button>
+        <button type="button" class="filtro-btn" data-estado="rechazado">Rechazados</button>
+      </div>
+      <div id="listaCreditos"></div>
+      <p id="vacioCreditos" style="display:none;">No tienes créditos activos registrados.</p>
+    </div>
+
+  </div>
+
+  <div id="vistaChats" class="vista">
+
+    <div class="panel" id="panelListaChats">
+      <h2>Chats con clientes</h2>
+      <div class="tabs">
+        <button type="button" class="filtro-btn-chat activo" data-estado-chat="todos">Todos</button>
+        <button type="button" class="filtro-btn-chat" data-estado-chat="abierto">Sin atender</button>
+        <button type="button" class="filtro-btn-chat" data-estado-chat="atendido">Atendidos</button>
+        <button type="button" class="filtro-btn-chat" data-estado-chat="cerrado">Cerrados</button>
+      </div>
+      <div id="listaChats"></div>
+      <p id="vacioChats" style="display:none;">No hay conversaciones todavía.</p>
+    </div>
+
+    <div class="panel" id="panelDetalleChat" style="display:none;">
+      <button type="button" class="btn btn-secundario" id="btnVolverChats">← Volver a la lista</button>
+      <h2 id="tituloChatDetalle" style="margin-top:14px;">Conversación</h2>
+      <p id="infoChatDetalle" class="ayuda" style="margin-top:-4px;"></p>
+      <div id="mensajesChat" class="mensajes-chat"></div>
+      <form id="formRespuestaChat" class="fila" style="margin-top:12px;">
+        <input type="text" id="campoRespuestaChat" placeholder="Escribe tu respuesta..." required>
+        <button type="submit" class="btn btn-primario" style="flex:0 0 auto;">Enviar</button>
+      </form>
+      <div class="acciones-credito" style="margin-top:16px;">
+        <button type="button" class="btn btn-secundario" id="btnAtenderChat">Atender este chat</button>
+        <button type="button" class="btn btn-primario" id="btnCrearCreditoDesdeChat">Crear crédito desde este chat</button>
+        <button type="button" class="btn btn-peligro" id="btnCerrarChat">Cerrar conversación</button>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- ======================================================= -->
+<!-- FIREBASE                                                 -->
+<!-- ======================================================= -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// =========================================================
+// 1) CONFIGURACIÓN DE FIREBASE — PEGA AQUÍ TUS DATOS
+//    (Debe ser EXACTAMENTE la misma configuración que uses
+//    en tienda.html, porque ambos archivos comparten el
+//    mismo proyecto de Firebase)
+// =========================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCjMj_9H_-omHVV6wyvYxg3txHxOILfU2Q",
+  authDomain: "afim-store-1bd2c.firebaseapp.com",
+  projectId: "afim-store-1bd2c",
+  storageBucket: "afim-store-1bd2c.firebasestorage.app",
+  messagingSenderId: "848659458259",
+  appId: "1:848659458259:web:30d2efc9f917f5cbd3cc26"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+// Nota: no usamos Firebase Storage. Las fotos se guardan directamente
+// dentro del documento de Firestore, convertidas a una imagen comprimida
+// en formato de texto (base64), así no se necesita el plan de pago Blaze.
+
+// =========================================================
+// 2) LOGIN
+// =========================================================
+const pantallaLogin = document.getElementById('pantallaLogin');
+const cabecera = document.getElementById('cabecera');
+const pantallaAdmin = document.getElementById('pantallaAdmin');
+const mensajeError = document.getElementById('mensajeError');
+
+document.getElementById('formLogin').addEventListener('submit', function(e){
+  e.preventDefault();
+  mensajeError.textContent = '';
+  const correo = document.getElementById('loginCorreo').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  auth.signInWithEmailAndPassword(correo, password)
+    .catch(function(error){
+      mensajeError.textContent = 'No se pudo iniciar sesión: correo o contraseña incorrectos.';
+      console.error(error);
+    });
+});
+
+document.getElementById('btnCerrarSesion').addEventListener('click', function(){
+  auth.signOut();
+});
+
+auth.onAuthStateChanged(function(usuario){
+  if (usuario){
+    pantallaLogin.style.display = 'none';
+    cabecera.style.display = 'flex';
+    pantallaAdmin.style.display = 'block';
+    escucharProductos();
+    escucharCreditos();
+    escucharChats();
+  } else {
+    pantallaLogin.style.display = 'block';
+    cabecera.style.display = 'none';
+    pantallaAdmin.style.display = 'none';
+  }
+});
+
+// =========================================================
+// 2.5) PESTAÑAS (Productos / Créditos / Configuración)
+// =========================================================
+const botonesTab = document.querySelectorAll('.tab-btn');
+const vistas = document.querySelectorAll('.vista');
+
+function mostrarVista(idVista){
+  botonesTab.forEach(function(boton){
+    boton.classList.toggle('activo', boton.getAttribute('data-vista') === idVista);
+  });
+  vistas.forEach(function(vista){
+    vista.classList.toggle('activa', vista.id === idVista);
+  });
+}
+
+botonesTab.forEach(function(boton){
+  boton.addEventListener('click', function(){
+    mostrarVista(boton.getAttribute('data-vista'));
+  });
+});
+
+mostrarVista('vistaProductos');
+
+// =========================================================
+// 3) FORMULARIO: AGREGAR / EDITAR PRODUCTO
+// =========================================================
+const formProducto = document.getElementById('formProducto');
+const campoId = document.getElementById('productoId');
+const campoNombre = document.getElementById('campoNombre');
+const campoCategoria = document.getElementById('campoCategoria');
+const campoPrecio = document.getElementById('campoPrecio');
+const campoDescripcion = document.getElementById('campoDescripcion');
+const campoImagen = document.getElementById('campoImagen');
+const previaImagenActual = document.getElementById('previaImagenActual');
+const tituloFormulario = document.getElementById('tituloFormulario');
+const btnGuardar = document.getElementById('btnGuardar');
+const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+const mensajeFormulario = document.getElementById('mensajeFormulario');
+const ayudaImagen = document.getElementById('ayudaImagen');
+
+let imagenActualUrl = '';
+
+function limpiarFormulario(){
+  campoId.value = '';
+  formProducto.reset();
+  previaImagenActual.style.display = 'none';
+  previaImagenActual.src = '';
+  imagenActualUrl = '';
+  tituloFormulario.textContent = 'Agregar producto';
+  btnGuardar.textContent = 'Guardar producto';
+  btnCancelarEdicion.style.display = 'none';
+  ayudaImagen.textContent = 'Selecciona una imagen (obligatoria al agregar un producto nuevo). Se ajusta automáticamente para que no pese mucho.';
+  mensajeFormulario.textContent = '';
+}
+
+btnCancelarEdicion.addEventListener('click', limpiarFormulario);
+
+// Convierte la foto elegida en una imagen comprimida (JPEG) en formato
+// base64, lista para guardarse como texto dentro del documento de Firestore.
+// Así evitamos usar Firebase Storage (que ahora pide el plan de pago Blaze).
+function procesarImagen(archivo){
+  return new Promise(function(resolve, reject){
+    const lector = new FileReader();
+    lector.onload = function(e){
+      const img = new Image();
+      img.onload = function(){
+        function generar(calidad, anchoMax){
+          let ancho = img.width;
+          let alto = img.height;
+          if (ancho > anchoMax){
+            alto = Math.round(alto * (anchoMax / ancho));
+            ancho = anchoMax;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = ancho;
+          canvas.height = alto;
+          canvas.getContext('2d').drawImage(img, 0, 0, ancho, alto);
+          return canvas.toDataURL('image/jpeg', calidad);
+        }
+        let resultado = generar(0.72, 800);
+        if (resultado.length > 700000){
+          resultado = generar(0.5, 600);
+        }
+        if (resultado.length > 700000){
+          reject(new Error('La foto sigue pesando demasiado incluso comprimida. Intenta con otra imagen de menor resolución.'));
+          return;
+        }
+        resolve(resultado);
+      };
+      img.onerror = function(){ reject(new Error('No se pudo leer la imagen seleccionada.')); };
+      img.src = e.target.result;
+    };
+    lector.onerror = function(){ reject(new Error('No se pudo leer el archivo seleccionado.')); };
+    lector.readAsDataURL(archivo);
+  });
+}
+
+formProducto.addEventListener('submit', function(e){
+  e.preventDefault();
+  mensajeFormulario.textContent = '';
+
+  const id = campoId.value;
+  const archivo = campoImagen.files[0];
+
+  if (!id && !archivo){
+    mensajeFormulario.textContent = 'Debes seleccionar una foto para el producto.';
+    mensajeFormulario.style.color = 'var(--rojo)';
+    return;
+  }
+
+  btnGuardar.disabled = true;
+  btnGuardar.textContent = 'Guardando...';
+
+  const datosBase = {
+    nombre: campoNombre.value.trim(),
+    categoria: campoCategoria.value.trim(),
+    precio: parseFloat(campoPrecio.value),
+    descripcion: campoDescripcion.value.trim()
+  };
+
+  const promesaImagen = archivo ? procesarImagen(archivo) : Promise.resolve(null);
+
+  promesaImagen.then(function(imagenBase64){
+    const datos = Object.assign({}, datosBase);
+
+    if (imagenBase64){
+      datos.imagenUrl = imagenBase64;
+    }
+
+    if (id){
+      // EDITAR producto existente (si no se eligió foto nueva, se conserva la actual)
+      return db.collection('productos').doc(id).update(datos);
+    } else {
+      // AGREGAR producto nuevo
+      datos.creado = firebase.firestore.FieldValue.serverTimestamp();
+      return db.collection('productos').add(datos);
+    }
+  }).then(function(){
+    mensajeFormulario.style.color = 'green';
+    mensajeFormulario.textContent = 'Producto guardado correctamente.';
+    limpiarFormulario();
+  }).catch(function(error){
+    console.error(error);
+    mensajeFormulario.style.color = 'var(--rojo)';
+    mensajeFormulario.textContent = 'Ocurrió un error al guardar el producto.';
+  }).finally(function(){
+    btnGuardar.disabled = false;
+    if (btnGuardar.textContent === 'Guardando...') btnGuardar.textContent = 'Guardar producto';
+  });
+});
+
+// =========================================================
+// 4) LISTA DE PRODUCTOS EN TIEMPO REAL
+// =========================================================
+const listaProductos = document.getElementById('listaProductos');
+const vacioLista = document.getElementById('vacioLista');
+const campoBuscarProducto = document.getElementById('buscarProducto');
+let dejarDeEscuchar = null;
+let productosCache = [];
+
+function formatearPrecio(numero){
+  return Number(numero || 0).toLocaleString('es-MX', { style:'currency', currency:'MXN' });
+}
+
+function renderizarListaProductos(lista){
+  listaProductos.innerHTML = '';
+  if (lista.length === 0){
+    vacioLista.style.display = 'block';
+    vacioLista.textContent = productosCache.length === 0
+      ? 'Todavía no has agregado ningún producto.'
+      : 'No se encontró ningún producto con ese nombre o categoría.';
+    return;
+  }
+  vacioLista.style.display = 'none';
+
+  lista.forEach(function(p){
+    const tarjeta = document.createElement('div');
+    tarjeta.className = 'tarjeta';
+    tarjeta.innerHTML =
+      '<img src="' + (p.imagenUrl || '') + '" alt="' + escaparHtml(p.nombre) + '">' +
+      '<div class="info">' +
+        '<span class="categoria">' + escaparHtml(p.categoria || '') + '</span>' +
+        '<span class="nombre">' + escaparHtml(p.nombre || '') + '</span>' +
+        '<span class="precio">' + formatearPrecio(p.precio) + '</span>' +
+        '<span class="descripcion">' + escaparHtml(p.descripcion || '') + '</span>' +
+      '</div>' +
+      '<div class="acciones">' +
+        '<button type="button" class="btn btn-secundario" data-editar="' + p.id + '">Editar</button>' +
+        '<button type="button" class="btn btn-peligro" data-borrar="' + p.id + '">Eliminar</button>' +
+      '</div>';
+    listaProductos.appendChild(tarjeta);
+  });
+}
+
+function aplicarBusquedaProductos(){
+  const termino = campoBuscarProducto.value.trim().toLowerCase();
+  const filtrados = !termino ? productosCache : productosCache.filter(function(p){
+    return (p.nombre || '').toLowerCase().includes(termino) || (p.categoria || '').toLowerCase().includes(termino);
+  });
+  renderizarListaProductos(filtrados);
+}
+
+campoBuscarProducto.addEventListener('input', aplicarBusquedaProductos);
+
+function escucharProductos(){
+  if (dejarDeEscuchar) return; // ya está escuchando
+  dejarDeEscuchar = db.collection('productos').orderBy('creado', 'desc')
+    .onSnapshot(function(snapshot){
+      productosCache = [];
+      snapshot.forEach(function(doc){
+        productosCache.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      aplicarBusquedaProductos();
+    }, function(error){
+      console.error('Error leyendo productos:', error);
+    });
+}
+
+listaProductos.addEventListener('click', function(e){
+  const idEditar = e.target.getAttribute('data-editar');
+  const idBorrar = e.target.getAttribute('data-borrar');
+
+  if (idEditar){
+    db.collection('productos').doc(idEditar).get().then(function(doc){
+      if (!doc.exists) return;
+      const p = doc.data();
+      campoId.value = doc.id;
+      campoNombre.value = p.nombre || '';
+      campoCategoria.value = p.categoria || '';
+      campoPrecio.value = p.precio || 0;
+      campoDescripcion.value = p.descripcion || '';
+      imagenActualUrl = p.imagenUrl || '';
+      if (imagenActualUrl){
+        previaImagenActual.src = imagenActualUrl;
+        previaImagenActual.style.display = 'block';
+      }
+      tituloFormulario.textContent = 'Editar producto';
+      btnGuardar.textContent = 'Guardar cambios';
+      btnCancelarEdicion.style.display = 'inline-block';
+      ayudaImagen.textContent = 'Deja este campo vacío si no quieres cambiar la foto actual.';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  if (idBorrar){
+    if (!confirm('¿Seguro que quieres eliminar este producto? Esta acción no se puede deshacer.')) return;
+    db.collection('productos').doc(idBorrar).delete().catch(function(error){
+      console.error(error);
+      alert('Ocurrió un error al eliminar el producto.');
+    });
+  }
+});
+
+function escaparHtml(texto){
+  const div = document.createElement('div');
+  div.textContent = texto || '';
+  return div.innerHTML;
+}
+
+// =========================================================
+// 6) CRÉDITOS ACTIVOS
+// Colección Firestore "creditos". Cada documento guarda: cliente,
+// direccion, fechaCompra, montoCredito (monto original), saldoActual
+// (se descuenta con cada pago) y pagos (lista de {fecha, monto}).
+// Esta colección es privada: solo tú (autenticado) puedes leerla o
+// escribirla — revisa que tus reglas de Firestore incluyan
+// match /creditos/{idCredito} { allow read, write: if request.auth != null; }
+// =========================================================
+const formCredito = document.getElementById('formCredito');
+const campoClienteNombre = document.getElementById('campoClienteNombre');
+const campoClienteDireccion = document.getElementById('campoClienteDireccion');
+const campoFechaCompra = document.getElementById('campoFechaCompra');
+const campoMontoCredito = document.getElementById('campoMontoCredito');
+const btnGuardarCredito = document.getElementById('btnGuardarCredito');
+const mensajeCredito = document.getElementById('mensajeCredito');
+const listaCreditos = document.getElementById('listaCreditos');
+const vacioCreditos = document.getElementById('vacioCreditos');
+let dejarDeEscucharCreditos = null;
+let creditosCache = [];
+let filtroEstadoActivo = 'todos';
+let creditoDesdeChatId = null; // si viene de un chat, el crédito nace ya 'aceptado'
+
+function formatearFecha(fechaTexto){
+  if (!fechaTexto) return 'Sin fecha';
+  const partes = fechaTexto.split('-');
+  if (partes.length !== 3) return fechaTexto;
+  return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+
+function correoAdminActual(){
+  return (auth.currentUser && auth.currentUser.email) || 'desconocido';
+}
+
+formCredito.addEventListener('submit', function(e){
+  e.preventDefault();
+  mensajeCredito.textContent = '';
+
+  const monto = parseFloat(campoMontoCredito.value);
+  if (!(monto > 0)){
+    mensajeCredito.style.color = 'var(--rojo)';
+    mensajeCredito.textContent = 'El monto del crédito debe ser mayor a 0.';
+    return;
+  }
+
+  const idChatOrigen = creditoDesdeChatId;
+  const datosCredito = {
+    cliente: campoClienteNombre.value.trim(),
+    direccion: campoClienteDireccion.value.trim(),
+    fechaCompra: campoFechaCompra.value,
+    montoCredito: monto,
+    saldoActual: monto,
+    pagos: [],
+    creado: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  if (idChatOrigen){
+    datosCredito.estado = 'aceptado';
+    datosCredito.registradoPor = correoAdminActual();
+    datosCredito.aceptadoPor = correoAdminActual();
+    datosCredito.fechaDecision = firebase.firestore.FieldValue.serverTimestamp();
+    datosCredito.chatId = idChatOrigen;
+  } else {
+    datosCredito.estado = 'pendiente';
+    datosCredito.registradoPor = correoAdminActual();
+  }
+
+  btnGuardarCredito.disabled = true;
+  db.collection('creditos').add(datosCredito).then(function(refCredito){
+    if (!idChatOrigen) return null;
+    creditoDesdeChatId = null;
+    return db.collection('chats').doc(idChatOrigen).update({ creditoId: refCredito.id }).then(function(){
+      return db.collection('chats').doc(idChatOrigen).collection('mensajes').add({
+        autor: 'admin',
+        texto: 'Tu crédito por ' + formatearPrecio(monto) + ' fue registrado y aceptado. ¡Gracias por tu compra!',
+        nombreAutor: correoAdminActual(),
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+  }).then(function(){
+    mensajeCredito.style.color = 'green';
+    mensajeCredito.textContent = idChatOrigen
+      ? 'Crédito creado y marcado como aceptado, ligado a la conversación.'
+      : 'Crédito registrado correctamente como "Pendiente".';
+    formCredito.reset();
+  }).catch(function(error){
+    console.error(error);
+    mensajeCredito.style.color = 'var(--rojo)';
+    mensajeCredito.textContent = 'Ocurrió un error al registrar el crédito.';
+  }).finally(function(){
+    btnGuardarCredito.disabled = false;
+  });
+});
+
+const etiquetasEstado = { pendiente: 'Pendiente', aceptado: 'Aceptado', rechazado: 'Rechazado' };
+
+function renderizarCreditos(){
+  const lista = filtroEstadoActivo === 'todos'
+    ? creditosCache
+    : creditosCache.filter(function(c){ return (c.estado || 'pendiente') === filtroEstadoActivo; });
+
+  listaCreditos.innerHTML = '';
+  if (lista.length === 0){
+    vacioCreditos.style.display = 'block';
+    vacioCreditos.textContent = creditosCache.length === 0
+      ? 'No tienes créditos registrados todavía.'
+      : 'No hay créditos con ese estado.';
+    return;
+  }
+  vacioCreditos.style.display = 'none';
+
+  lista.forEach(function(c){
+    const pagos = c.pagos || [];
+    const ultimaCuota = pagos.length ? pagos[pagos.length - 1] : null;
+    const estado = c.estado || 'pendiente';
+    const liquidado = estado === 'aceptado' && Number(c.saldoActual || 0) <= 0;
+    const badgeEstado = '<span class="badge-estado ' + estado + '">' + (etiquetasEstado[estado] || 'Pendiente') + '</span>';
+
+    let botonesEstado = '';
+    if (estado === 'pendiente'){
+      botonesEstado =
+        '<button type="button" class="btn btn-primario" data-aceptar="' + c.id + '">Marcar como aceptado</button>' +
+        '<button type="button" class="btn btn-secundario" data-rechazar="' + c.id + '">Marcar como rechazado</button>';
+    }
+
+    let formPagoHtml = '';
+    if (estado === 'aceptado'){
+      formPagoHtml =
+        '<form class="form-pago" data-id="' + c.id + '">' +
+          '<input type="number" min="0" step="0.01" class="pago-monto" placeholder="Monto del pago" required>' +
+          '<input type="date" class="pago-fecha" required>' +
+          '<button type="submit" class="btn btn-primario">Registrar pago</button>' +
+        '</form>';
+    }
+
+    const tarjeta = document.createElement('div');
+    tarjeta.className = 'tarjeta-credito';
+    tarjeta.innerHTML =
+      '<div class="info-credito">' +
+        '<div><strong>Cliente:</strong> ' + escaparHtml(c.cliente) + badgeEstado + (liquidado ? '<span class="badge-liquidado">Liquidado</span>' : '') + '</div>' +
+        '<div><strong>Dirección:</strong> ' + escaparHtml(c.direccion) + '</div>' +
+        '<div><strong>Fecha de compra:</strong> ' + formatearFecha(c.fechaCompra) + '</div>' +
+        '<div><strong>Monto del crédito:</strong> ' + formatearPrecio(c.montoCredito) + '</div>' +
+        '<div><strong>Saldo actual:</strong> ' + formatearPrecio(c.saldoActual) + '</div>' +
+        '<div><strong>Última cuota:</strong> ' + (ultimaCuota ? (formatearPrecio(ultimaCuota.monto) + ' el ' + formatearFecha(ultimaCuota.fecha)) : 'Sin pagos aún') + '</div>' +
+        '<div><strong>Registrado por:</strong> ' + escaparHtml(c.registradoPor || 'Desconocido') + '</div>' +
+        (c.aceptadoPor ? '<div><strong>Aceptado por:</strong> ' + escaparHtml(c.aceptadoPor) + '</div>' : '') +
+        (c.rechazadoPor ? '<div><strong>Rechazado por:</strong> ' + escaparHtml(c.rechazadoPor) + '</div>' : '') +
+      '</div>' +
+      (botonesEstado ? '<div class="acciones-credito">' + botonesEstado + '</div>' : '') +
+      formPagoHtml +
+      '<button type="button" class="btn btn-peligro" data-borrar-credito="' + c.id + '">Eliminar crédito</button>';
+    listaCreditos.appendChild(tarjeta);
+  });
+}
+
+document.querySelectorAll('.filtro-btn').forEach(function(boton){
+  boton.addEventListener('click', function(){
+    document.querySelectorAll('.filtro-btn').forEach(function(b){ b.classList.remove('activo'); });
+    boton.classList.add('activo');
+    filtroEstadoActivo = boton.getAttribute('data-estado');
+    renderizarCreditos();
+  });
+});
+
+function escucharCreditos(){
+  if (dejarDeEscucharCreditos) return;
+  dejarDeEscucharCreditos = db.collection('creditos').orderBy('creado', 'desc')
+    .onSnapshot(function(snapshot){
+      creditosCache = [];
+      snapshot.forEach(function(doc){
+        creditosCache.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      renderizarCreditos();
+    }, function(error){
+      console.error('Error leyendo créditos:', error);
+    });
+}
+
+listaCreditos.addEventListener('submit', function(e){
+  const formPago = e.target.closest('.form-pago');
+  if (!formPago) return;
+  e.preventDefault();
+
+  const id = formPago.getAttribute('data-id');
+  const monto = parseFloat(formPago.querySelector('.pago-monto').value);
+  const fecha = formPago.querySelector('.pago-fecha').value;
+
+  if (!(monto > 0) || !fecha){
+    alert('Escribe un monto de pago válido y una fecha.');
+    return;
+  }
+
+  const botonPago = formPago.querySelector('button');
+  botonPago.disabled = true;
+  db.collection('creditos').doc(id).update({
+    saldoActual: firebase.firestore.FieldValue.increment(-monto),
+    pagos: firebase.firestore.FieldValue.arrayUnion({ fecha: fecha, monto: monto, registradoPor: correoAdminActual(), registrado: Date.now() })
+  }).then(function(){
+    formPago.reset();
+  }).catch(function(error){
+    console.error(error);
+    alert('Ocurrió un error al registrar el pago.');
+  }).finally(function(){
+    botonPago.disabled = false;
+  });
+});
+
+listaCreditos.addEventListener('click', function(e){
+  const idAceptar = e.target.getAttribute('data-aceptar');
+  const idRechazar = e.target.getAttribute('data-rechazar');
+  const idBorrar = e.target.getAttribute('data-borrar-credito');
+
+  if (idAceptar){
+    db.collection('creditos').doc(idAceptar).update({
+      estado: 'aceptado',
+      aceptadoPor: correoAdminActual(),
+      fechaDecision: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function(error){
+      console.error(error);
+      alert('Ocurrió un error al marcar el crédito como aceptado.');
+    });
+  }
+
+  if (idRechazar){
+    if (!confirm('¿Confirmas que el cliente rechazó este crédito?')) return;
+    db.collection('creditos').doc(idRechazar).update({
+      estado: 'rechazado',
+      rechazadoPor: correoAdminActual(),
+      fechaDecision: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(function(error){
+      console.error(error);
+      alert('Ocurrió un error al marcar el crédito como rechazado.');
+    });
+  }
+
+  if (idBorrar){
+    if (!confirm('¿Seguro que quieres eliminar este crédito? Esta acción no se puede deshacer.')) return;
+    db.collection('creditos').doc(idBorrar).delete().catch(function(error){
+      console.error(error);
+      alert('Ocurrió un error al eliminar el crédito.');
+    });
+  }
+});
+
+// =========================================================
+// 7) CHATS CON CLIENTES
+// Colección Firestore "chats" (documento por conversación) con
+// subcolección "mensajes". Reemplaza a WhatsApp: todo el historial
+// queda guardado, y desde aquí se puede "atender" un chat, cerrarlo,
+// o crear un crédito ya aceptado directamente ligado a esa conversación.
+// =========================================================
+const listaChats = document.getElementById('listaChats');
+const vacioChats = document.getElementById('vacioChats');
+const panelListaChats = document.getElementById('panelListaChats');
+const panelDetalleChat = document.getElementById('panelDetalleChat');
+const tituloChatDetalle = document.getElementById('tituloChatDetalle');
+const infoChatDetalle = document.getElementById('infoChatDetalle');
+const mensajesChatEl = document.getElementById('mensajesChat');
+const formRespuestaChat = document.getElementById('formRespuestaChat');
+const campoRespuestaChat = document.getElementById('campoRespuestaChat');
+const btnAtenderChat = document.getElementById('btnAtenderChat');
+const btnCerrarChat = document.getElementById('btnCerrarChat');
+const btnCrearCreditoDesdeChat = document.getElementById('btnCrearCreditoDesdeChat');
+const btnVolverChats = document.getElementById('btnVolverChats');
+const tabBotonChats = document.getElementById('tabBotonChats');
+
+let dejarDeEscucharChats = null;
+let dejarDeEscucharChatActual = null;
+let dejarDeEscucharMensajesChat = null;
+let chatsCache = [];
+let filtroEstadoChat = 'todos';
+let chatAbiertoId = null;
+let chatAbiertoData = null;
+
+const etiquetasEstadoChat = { abierto: 'Sin atender', atendido: 'Atendido', cerrado: 'Cerrado' };
+
+function escucharChats(){
+  if (dejarDeEscucharChats) return;
+  dejarDeEscucharChats = db.collection('chats').orderBy('actualizado', 'desc')
+    .onSnapshot(function(snapshot){
+      chatsCache = [];
+      snapshot.forEach(function(doc){
+        chatsCache.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      renderizarChats();
+    }, function(error){
+      console.error('Error leyendo chats:', error);
+    });
+}
+
+function renderizarChats(){
+  const abiertos = chatsCache.filter(function(c){ return (c.estado || 'abierto') === 'abierto'; }).length;
+  if (tabBotonChats){
+    tabBotonChats.textContent = 'Chats' + (abiertos > 0 ? ' (' + abiertos + ')' : '');
+  }
+
+  const lista = filtroEstadoChat === 'todos'
+    ? chatsCache
+    : chatsCache.filter(function(c){ return (c.estado || 'abierto') === filtroEstadoChat; });
+
+  listaChats.innerHTML = '';
+  if (lista.length === 0){
+    vacioChats.style.display = 'block';
+    vacioChats.textContent = chatsCache.length === 0
+      ? 'No hay conversaciones todavía.'
+      : 'No hay chats con ese estado.';
+    return;
+  }
+  vacioChats.style.display = 'none';
+
+  lista.forEach(function(c){
+    const estado = c.estado || 'abierto';
+    const claseBadge = estado === 'abierto' ? 'pendiente' : (estado === 'atendido' ? 'aceptado' : 'rechazado');
+    const fila = document.createElement('div');
+    fila.className = 'tarjeta-credito';
+    fila.innerHTML =
+      '<div class="info-credito">' +
+        '<div><strong>Cliente:</strong> ' + escaparHtml(c.nombreCliente || 'Sin nombre') + ' <span class="badge-estado ' + claseBadge + '">' + etiquetasEstadoChat[estado] + '</span></div>' +
+        '<div><strong>Teléfono:</strong> ' + escaparHtml(c.telefono || '') + '</div>' +
+        (c.atendidoPor ? '<div><strong>Atendido por:</strong> ' + escaparHtml(c.atendidoPor) + '</div>' : '') +
+        (c.creditoId ? '<div><strong>Crédito creado:</strong> Sí</div>' : '') +
+      '</div>' +
+      '<button type="button" class="btn btn-primario" data-abrir-chat="' + c.id + '">Abrir conversación</button>';
+    listaChats.appendChild(fila);
+  });
+}
+
+document.querySelectorAll('.filtro-btn-chat').forEach(function(boton){
+  boton.addEventListener('click', function(){
+    document.querySelectorAll('.filtro-btn-chat').forEach(function(b){ b.classList.remove('activo'); });
+    boton.classList.add('activo');
+    filtroEstadoChat = boton.getAttribute('data-estado-chat');
+    renderizarChats();
+  });
+});
+
+listaChats.addEventListener('click', function(e){
+  const id = e.target.getAttribute('data-abrir-chat');
+  if (id) abrirDetalleChat(id);
+});
+
+function actualizarInfoChatDetalle(){
+  if (!chatAbiertoData) return;
+  const estado = chatAbiertoData.estado || 'abierto';
+  infoChatDetalle.textContent = 'Teléfono: ' + (chatAbiertoData.telefono || 'N/D') +
+    ' · Estado: ' + etiquetasEstadoChat[estado] +
+    (chatAbiertoData.atendidoPor ? ' · Atendido por: ' + chatAbiertoData.atendidoPor : '');
+  btnAtenderChat.style.display = estado === 'abierto' ? 'inline-block' : 'none';
+  btnCerrarChat.style.display = estado === 'cerrado' ? 'none' : 'inline-block';
+}
+
+function abrirDetalleChat(id){
+  chatAbiertoId = id;
+  chatAbiertoData = chatsCache.find(function(c){ return c.id === id; }) || null;
+  panelListaChats.style.display = 'none';
+  panelDetalleChat.style.display = 'block';
+  tituloChatDetalle.textContent = 'Conversación con ' + (chatAbiertoData ? chatAbiertoData.nombreCliente : '');
+  actualizarInfoChatDetalle();
+
+  if (dejarDeEscucharMensajesChat){ dejarDeEscucharMensajesChat(); dejarDeEscucharMensajesChat = null; }
+  dejarDeEscucharMensajesChat = db.collection('chats').doc(id).collection('mensajes')
+    .orderBy('fecha', 'asc')
+    .onSnapshot(function(snapshot){
+      mensajesChatEl.innerHTML = '';
+      snapshot.forEach(function(doc){
+        const m = doc.data();
+        const burbuja = document.createElement('div');
+        burbuja.className = 'burbuja ' + (m.autor === 'admin' ? 'admin' : 'cliente');
+        burbuja.innerHTML = '<span class="autor">' + escaparHtml(m.nombreAutor || '') + '</span>' + escaparHtml(m.texto || '');
+        mensajesChatEl.appendChild(burbuja);
+      });
+      mensajesChatEl.scrollTop = mensajesChatEl.scrollHeight;
+    }, function(error){
+      console.error('Error leyendo mensajes del chat:', error);
+    });
+
+  if (dejarDeEscucharChatActual){ dejarDeEscucharChatActual(); dejarDeEscucharChatActual = null; }
+  dejarDeEscucharChatActual = db.collection('chats').doc(id).onSnapshot(function(doc){
+    if (doc.exists){
+      chatAbiertoData = Object.assign({ id: doc.id }, doc.data());
+      actualizarInfoChatDetalle();
+    }
+  });
+}
+
+btnVolverChats.addEventListener('click', function(){
+  panelDetalleChat.style.display = 'none';
+  panelListaChats.style.display = 'block';
+  if (dejarDeEscucharMensajesChat){ dejarDeEscucharMensajesChat(); dejarDeEscucharMensajesChat = null; }
+  if (dejarDeEscucharChatActual){ dejarDeEscucharChatActual(); dejarDeEscucharChatActual = null; }
+  chatAbiertoId = null;
+  chatAbiertoData = null;
+});
+
+btnAtenderChat.addEventListener('click', function(){
+  if (!chatAbiertoId) return;
+  db.collection('chats').doc(chatAbiertoId).update({
+    estado: 'atendido',
+    atendidoPor: correoAdminActual()
+  }).catch(function(error){
+    console.error(error);
+    alert('Ocurrió un error al tomar este chat.');
+  });
+});
+
+btnCerrarChat.addEventListener('click', function(){
+  if (!chatAbiertoId) return;
+  if (!confirm('¿Cerrar esta conversación?')) return;
+  db.collection('chats').doc(chatAbiertoId).update({ estado: 'cerrado' }).catch(function(error){
+    console.error(error);
+    alert('Ocurrió un error al cerrar la conversación.');
+  });
+});
+
+formRespuestaChat.addEventListener('submit', function(e){
+  e.preventDefault();
+  if (!chatAbiertoId) return;
+  const texto = campoRespuestaChat.value.trim();
+  if (!texto) return;
+  db.collection('chats').doc(chatAbiertoId).collection('mensajes').add({
+    autor: 'admin',
+    texto: texto,
+    nombreAutor: correoAdminActual(),
+    fecha: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    return db.collection('chats').doc(chatAbiertoId).update({
+      actualizado: firebase.firestore.FieldValue.serverTimestamp(),
+      ultimoMensajeDe: 'admin'
+    });
+  }).then(function(){
+    campoRespuestaChat.value = '';
+  }).catch(function(error){
+    console.error(error);
+    alert('Ocurrió un error al enviar el mensaje.');
+  });
+});
+
+btnCrearCreditoDesdeChat.addEventListener('click', function(){
+  if (!chatAbiertoData) return;
+  creditoDesdeChatId = chatAbiertoId;
+  mostrarVista('vistaCreditos');
+  campoClienteNombre.value = chatAbiertoData.nombreCliente || '';
+  campoClienteDireccion.value = '';
+  campoFechaCompra.value = new Date().toISOString().slice(0, 10);
+  campoMontoCredito.value = '';
+  mensajeCredito.style.color = 'var(--negro)';
+  mensajeCredito.textContent = 'Completa la dirección y el monto, y guarda: este crédito se creará ya como "Aceptado", ligado a la conversación con ' + (chatAbiertoData.nombreCliente || 'el cliente') + '.';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+</body>
+</html>
