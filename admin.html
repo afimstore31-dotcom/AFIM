@@ -43,6 +43,23 @@
   }
   header button:hover{ background:var(--rojo-oscuro); }
 
+  #bannerAlertaCapital{
+    padding:12px 24px;
+    font-size:14px;
+    font-weight:bold;
+    text-align:center;
+  }
+  #bannerAlertaCapital.advertencia{
+    background:#fff3cd;
+    color:#7a5b00;
+    border-bottom:2px solid #ffd764;
+  }
+  #bannerAlertaCapital.peligro{
+    background:var(--rojo);
+    color:var(--blanco);
+    border-bottom:2px solid var(--rojo-oscuro);
+  }
+
   #pantallaLogin{
     max-width:360px;
     margin:80px auto;
@@ -293,6 +310,15 @@
     border-radius:10px;
     margin-left:6px;
   }
+  .badge-mora{
+    display:inline-block;
+    background:var(--rojo);
+    color:var(--blanco);
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+    margin-left:6px;
+  }
   .form-pago{
     display:flex;
     gap:8px;
@@ -309,6 +335,98 @@
     font-family:inherit;
   }
   .form-pago button{ white-space:nowrap; }
+  .form-abono{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+    padding-top:10px;
+    border-top:1px dashed var(--gris-borde);
+  }
+  .form-abono input{
+    flex:1;
+    min-width:140px;
+    padding:8px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .form-abono select{
+    flex:1;
+    min-width:220px;
+    padding:8px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .form-abono button{ white-space:nowrap; }
+  .fila-aportacion{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+    align-items:center;
+  }
+  .fila-aportacion select,
+  .fila-aportacion input{
+    padding:8px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .fila-aportacion select{ flex:0 0 130px; }
+  .fila-aportacion .aportacion-monto{ flex:0 0 140px; }
+  .fila-aportacion .aportacion-disponible{
+    flex:1;
+    min-width:160px;
+    font-size:12px;
+    color:#555;
+  }
+  .fila-aportacion .btn-quitar-aportacion{
+    flex:0 0 auto;
+    background:var(--gris-borde);
+    border:none;
+    border-radius:6px;
+    width:32px;
+    height:32px;
+    cursor:pointer;
+    font-size:16px;
+  }
+  .lista-aportaciones{
+    font-size:13px;
+    margin:8px 0;
+    padding-left:18px;
+  }
+  .fila-capital-socio{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+    padding:8px 0;
+    border-bottom:1px solid var(--gris-borde);
+  }
+  .fila-capital-socio:last-child{ border-bottom:none; }
+  .fila-capital-socio .nombre-socio{ flex:0 0 90px; font-weight:bold; }
+  .fila-capital-socio input{
+    flex:0 0 140px;
+    padding:8px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .fila-capital-socio .detalle-socio{ flex:1; min-width:180px; font-size:12px; color:#555; }
+  .fila-capital-socio .select-fuente-socio{
+    flex:0 0 140px;
+    padding:8px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:13px;
+    font-family:inherit;
+  }
   #vacioCreditos{
     color:#777;
     text-align:center;
@@ -465,12 +583,15 @@
   <button id="btnCerrarSesion">Cerrar sesión</button>
 </header>
 
+<div id="bannerAlertaCapital" style="display:none;"></div>
+
 <main id="pantallaAdmin">
 
   <div class="tabs">
     <button type="button" class="tab-btn" data-vista="vistaProductos">Productos</button>
     <button type="button" class="tab-btn" id="tabBotonChats" data-vista="vistaChats">Chats</button>
     <button type="button" class="tab-btn" data-vista="vistaCreditos">Créditos</button>
+    <button type="button" class="tab-btn" data-vista="vistaResumen">Resumen</button>
   </div>
 
   <div id="vistaProductos" class="vista">
@@ -521,6 +642,15 @@
   <div id="vistaCreditos" class="vista">
 
     <div class="panel">
+      <h2>Capital de la empresa</h2>
+      <p class="ayuda" style="margin-top:0;">Cuánto capital aporta cada socio. Edítalo cuando alguien añada más dinero; el límite total de la empresa se calcula solo, sumando los cinco.</p>
+      <div id="filasCapitalSocios"></div>
+      <button type="button" class="btn btn-secundario" id="btnGuardarCapitalSocios">Guardar capital de los socios</button>
+      <p id="mensajeLimiteCredito" style="font-size:13px; margin-top:8px;"></p>
+      <div class="panel-resumen" id="resumenCapital" style="margin-top:14px;">Cargando información de capital...</div>
+    </div>
+
+    <div class="panel">
       <h2>Registrar nuevo crédito</h2>
       <form id="formCredito">
         <div class="fila">
@@ -561,6 +691,11 @@
           </div>
         </div>
         <div class="panel-resumen" id="resumenCredito">Escribe el monto para ver el resumen del crédito.</div>
+
+        <label style="display:block; font-weight:bold; font-size:14px; margin-bottom:6px;">¿Quién aporta el capital de este crédito?</label>
+        <div id="filasAportaciones"></div>
+        <button type="button" class="btn btn-secundario" id="btnAgregarAportacion" style="margin-bottom:14px;">+ Agregar aportación</button>
+
         <button type="submit" class="btn btn-primario" id="btnGuardarCredito">Registrar crédito</button>
         <p class="ayuda" style="margin-top:10px;">El crédito se guarda como "Pendiente" hasta que alguien confirme, desde la lista de abajo, que el cliente lo aceptó.</p>
         <p id="mensajeCredito" style="font-size:13px; margin-top:8px;"></p>
@@ -577,6 +712,15 @@
       </div>
       <div id="listaCreditos"></div>
       <p id="vacioCreditos" style="display:none;">No tienes créditos activos registrados.</p>
+    </div>
+
+  </div>
+
+  <div id="vistaResumen" class="vista">
+
+    <div class="panel">
+      <h2>Resumen general de créditos</h2>
+      <div class="panel-resumen" id="resumenGeneralPanel">Cargando resumen...</div>
     </div>
 
   </div>
@@ -608,6 +752,13 @@
         <button type="button" class="btn btn-secundario" id="btnAtenderChat">Atender este chat</button>
         <button type="button" class="btn btn-primario" id="btnCrearCreditoDesdeChat">Crear crédito desde este chat</button>
         <button type="button" class="btn btn-peligro" id="btnCerrarChat">Cerrar conversación</button>
+      </div>
+      <p style="margin-top:20px;">
+        <button type="button" id="btnToggleOpcionesAvanzadasChat" style="background:none; border:none; color:#999; font-size:12px; cursor:pointer; padding:0; text-decoration:underline;">Mostrar opciones avanzadas</button>
+      </p>
+      <div id="panelOpcionesAvanzadasChat" style="display:none;">
+        <p class="ayuda" style="margin-top:0;">Esto borra la conversación completa (y sus mensajes) para siempre. Úsalo solo para limpiar chats de prueba o spam, no conversaciones reales de clientes.</p>
+        <button type="button" class="btn btn-peligro" id="btnEliminarChat">Eliminar esta conversación permanentemente</button>
       </div>
     </div>
 
@@ -676,6 +827,7 @@ auth.onAuthStateChanged(function(usuario){
     escucharProductos();
     escucharCreditos();
     escucharChats();
+    escucharCapital();
   } else {
     pantallaLogin.style.display = 'block';
     cabecera.style.display = 'none';
@@ -1023,6 +1175,153 @@ let creditoDesdeChatId = null; // si viene de un chat, el crédito nace ya 'acep
 // Plazos disponibles y su interés total (no anual: es el interés fijo de todo el plazo)
 const PLAZOS_CREDITO = { 24: 0.288, 36: 0.40, 48: 0.50 };
 const ETIQUETAS_FRECUENCIA = { semanal: 'semanal', quincenal: 'quincenal' };
+const ETIQUETAS_TIPO_PAGO = { cuota: 'Cuota', abono: 'Abono a capital' };
+
+// Capital pendiente (el préstamo sin contar interés) e interés pendiente,
+// para créditos con plazo definido. En créditos viejos sin capitalPendiente
+// guardado, se calcula al vuelo a partir del saldo actual.
+function obtenerCapitalPendiente(credito){
+  if (typeof credito.capitalPendiente === 'number') return credito.capitalPendiente;
+  if (credito.tasaInteres){
+    return Number(credito.saldoActual || 0) / (1 + Number(credito.tasaInteres));
+  }
+  return Number(credito.saldoActual || 0);
+}
+
+function obtenerInteresPendiente(credito){
+  return Math.max(0, Number(credito.saldoActual || 0) - obtenerCapitalPendiente(credito));
+}
+
+// Días de mora: compara la fecha en la que "debería" ir el cliente según su
+// plan de pagos (fecha de compra + N pagos programados) contra hoy. Solo
+// cuenta las cuotas normales como pagos "en tiempo" — los abonos a capital
+// son pagos extra y no cuentan como si adelantaran el calendario de cuotas.
+const COSTO_COBRANZA_POR_DIA = 100;
+
+function calcularDiasMora(credito){
+  const estado = credito.estado || 'pendiente';
+  const tienePlan = credito.plazoSemanas && credito.frecuenciaPago;
+  if (estado !== 'aceptado' || !tienePlan) return 0;
+  if (Number(credito.saldoActual || 0) <= 0) return 0;
+
+  const cuotasPagadas = (credito.pagos || []).filter(function(p){ return (p.tipo || 'cuota') === 'cuota'; }).length;
+  if (cuotasPagadas >= (credito.numeroPagos || 0)) return 0;
+
+  const incrementoDias = credito.frecuenciaPago === 'quincenal' ? 14 : 7;
+  if (!credito.fechaCompra) return 0;
+  const fechaEsperada = new Date(credito.fechaCompra + 'T00:00:00');
+  fechaEsperada.setDate(fechaEsperada.getDate() + incrementoDias * (cuotasPagadas + 1));
+  fechaEsperada.setHours(0, 0, 0, 0);
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const diferenciaMs = hoy.getTime() - fechaEsperada.getTime();
+  if (diferenciaMs <= 0) return 0;
+  return Math.floor(diferenciaMs / (1000 * 60 * 60 * 24));
+}
+
+function calcularGastosCobranza(diasMora){
+  return diasMora * COSTO_COBRANZA_POR_DIA;
+}
+
+// Moratorios ("interés sobre interés"): un porcentaje de la cuota vencida,
+// que se cobra una vez por cada período completo de atraso (cada semana o
+// quincena que pasa sin que el cliente se ponga al corriente), no por día.
+const TASA_MORATORIA = { semanal: 0.046, quincenal: 0.092 };
+
+function calcularPeriodosVencidos(diasMora, incrementoDias){
+  if (diasMora <= 0) return 0;
+  return Math.floor((diasMora - 1) / incrementoDias) + 1;
+}
+
+function calcularMoratorios(credito){
+  const diasMora = calcularDiasMora(credito);
+  if (diasMora <= 0) return 0;
+  const incrementoDias = credito.frecuenciaPago === 'quincenal' ? 14 : 7;
+  const periodos = calcularPeriodosVencidos(diasMora, incrementoDias);
+  const tasa = TASA_MORATORIA[credito.frecuenciaPago] || 0;
+  return periodos * tasa * Number(credito.cuotaSugerida || 0);
+}
+
+// Cuánto hay que cobrarle al cliente en su siguiente pago: si está al
+// corriente, es la cuota normal; si tiene atraso, se desglosa la cuota +
+// gastos de cobranza + moratorios.
+function calcularProximoPago(credito){
+  const cuotaBase = Number(credito.cuotaSugerida || 0);
+  const diasMora = calcularDiasMora(credito);
+  if (diasMora <= 0){
+    return { alCorriente: true, diasMora: 0, cuotaBase: cuotaBase, gastosCobranza: 0, moratorios: 0, total: cuotaBase };
+  }
+  const gastosCobranza = calcularGastosCobranza(diasMora);
+  const moratorios = calcularMoratorios(credito);
+  return {
+    alCorriente: false, diasMora: diasMora, cuotaBase: cuotaBase,
+    gastosCobranza: gastosCobranza, moratorios: moratorios,
+    total: cuotaBase + gastosCobranza + moratorios
+  };
+}
+
+// =========================================================
+// 6.1) APORTACIONES: quién de los socios pone el capital de cada crédito
+// =========================================================
+const SOCIOS_CREDITO = ['Alan', 'Fernando', 'Ivan', 'Miguel', 'Mario'];
+let capitalConfig = { limitesPorSocio: {} }; // se llena de verdad en escucharCapital() más abajo
+const filasAportacionesContenedor = document.getElementById('filasAportaciones');
+const btnAgregarAportacion = document.getElementById('btnAgregarAportacion');
+
+function actualizarEtiquetaDisponibleFila(fila){
+  const socio = fila.querySelector('.aportacion-socio').value;
+  const etiqueta = fila.querySelector('.aportacion-disponible');
+  etiqueta.textContent = 'Disponible de ' + socio + ': ' + formatearPrecio(calcularDisponibleSocio(socio));
+}
+
+function crearFilaAportacion(){
+  const fila = document.createElement('div');
+  fila.className = 'fila-aportacion';
+  const opciones = SOCIOS_CREDITO.map(function(nombre){ return '<option value="' + nombre + '">' + nombre + '</option>'; }).join('');
+  fila.innerHTML =
+    '<select class="aportacion-socio">' + opciones + '</select>' +
+    '<span class="aportacion-disponible"></span>' +
+    '<input type="number" class="aportacion-monto" min="0" step="0.01" placeholder="Monto aportado">' +
+    '<button type="button" class="btn-quitar-aportacion" title="Quitar esta fila">×</button>';
+  fila.querySelector('.btn-quitar-aportacion').addEventListener('click', function(){
+    fila.remove();
+  });
+  fila.querySelector('.aportacion-socio').addEventListener('change', function(){
+    actualizarEtiquetaDisponibleFila(fila);
+  });
+  actualizarEtiquetaDisponibleFila(fila);
+  return fila;
+}
+
+function limpiarFilasAportaciones(){
+  filasAportacionesContenedor.innerHTML = '';
+  filasAportacionesContenedor.appendChild(crearFilaAportacion());
+}
+
+function actualizarEtiquetasDisponibleTodasLasFilas(){
+  filasAportacionesContenedor.querySelectorAll('.fila-aportacion').forEach(actualizarEtiquetaDisponibleFila);
+}
+
+function obtenerAportacionesFormulario(){
+  const filas = filasAportacionesContenedor.querySelectorAll('.fila-aportacion');
+  const resultado = [];
+  filas.forEach(function(fila){
+    const socio = fila.querySelector('.aportacion-socio').value;
+    const monto = parseFloat(fila.querySelector('.aportacion-monto').value);
+    if (socio && monto > 0){
+      resultado.push({ socio: socio, monto: monto });
+    }
+  });
+  return resultado;
+}
+
+btnAgregarAportacion.addEventListener('click', function(){
+  filasAportacionesContenedor.appendChild(crearFilaAportacion());
+});
+
+limpiarFilasAportaciones();
 
 function calcularResumenCredito(){
   const monto = parseFloat(campoMontoCredito.value);
@@ -1071,6 +1370,233 @@ function correoAdminActual(){
   return (auth.currentUser && auth.currentUser.email) || 'desconocido';
 }
 
+// =========================================================
+// 6.2) CAPITAL DE LA EMPRESA Y ALERTAS DE LÍMITE DE CRÉDITO
+// Documento único en Firestore: configuracion/capital, con el campo
+// limitesPorSocio (mapa { Alan: monto, Fernando: monto, ... }, editable).
+// El límite total de la empresa es la suma de los 5. El "capital usado"
+// (de la empresa y de cada socio) se calcula solo:
+// - De la empresa: sumando el saldo de los créditos aceptados sin liquidar.
+// - De cada socio: sumando lo que aportó (campo aportaciones) en los
+//   créditos aceptados que todavía no se liquidan. En cuanto un crédito se
+//   liquida, ese dinero vuelve a estar disponible para el socio.
+// =========================================================
+const filasCapitalSocios = document.getElementById('filasCapitalSocios');
+const btnGuardarCapitalSocios = document.getElementById('btnGuardarCapitalSocios');
+const mensajeLimiteCredito = document.getElementById('mensajeLimiteCredito');
+const resumenCapital = document.getElementById('resumenCapital');
+const bannerAlertaCapital = document.getElementById('bannerAlertaCapital');
+const UMBRAL_ALERTA_CAPITAL = 0.85; // avisa desde el 85% de uso
+
+let dejarDeEscucharCapital = null;
+
+function obtenerLimiteSocio(socio){
+  return Number((capitalConfig.limitesPorSocio && capitalConfig.limitesPorSocio[socio]) || 0);
+}
+
+function calcularUsadoPorSocio(socio){
+  let total = 0;
+  creditosCache.forEach(function(c){
+    if ((c.estado || 'pendiente') !== 'aceptado' || !(Number(c.saldoActual || 0) > 0)) return;
+    (c.aportaciones || []).forEach(function(a){
+      if (a.socio === socio) total += Number(a.monto || 0);
+    });
+  });
+  return total;
+}
+
+function calcularDisponibleSocio(socio){
+  return obtenerLimiteSocio(socio) - calcularUsadoPorSocio(socio);
+}
+
+function calcularLimiteTotalEmpresa(){
+  return SOCIOS_CREDITO.reduce(function(total, socio){ return total + obtenerLimiteSocio(socio); }, 0);
+}
+
+function calcularCapitalUsado(){
+  return creditosCache
+    .filter(function(c){ return (c.estado || 'pendiente') === 'aceptado' && Number(c.saldoActual || 0) > 0; })
+    .reduce(function(total, c){ return total + Number(c.saldoActual || 0); }, 0);
+}
+
+function actualizarBannerAlertaCapital(limite, usado, porcentaje){
+  if (!(limite > 0)){
+    bannerAlertaCapital.style.display = 'none';
+    return;
+  }
+  if (usado >= limite){
+    bannerAlertaCapital.className = 'peligro';
+    bannerAlertaCapital.style.display = 'block';
+    bannerAlertaCapital.textContent = '❌ Alcanzaste o superaste tu límite de crédito: ' + formatearPrecio(usado) + ' prestados de ' + formatearPrecio(limite) + '.';
+  } else if (porcentaje >= UMBRAL_ALERTA_CAPITAL * 100){
+    bannerAlertaCapital.className = 'advertencia';
+    bannerAlertaCapital.style.display = 'block';
+    bannerAlertaCapital.textContent = '⚠️ Te estás acercando a tu límite de crédito: llevas ' + formatearPrecio(usado) + ' de ' + formatearPrecio(limite) + ' (' + porcentaje.toFixed(1) + '%).';
+  } else {
+    bannerAlertaCapital.style.display = 'none';
+  }
+}
+
+const FUENTES_CAPITAL = ['Banamex', 'BBVA', 'Mercado Pago', 'Efectivo'];
+
+function obtenerFuenteSocio(socio){
+  return (capitalConfig.fuentesPorSocio && capitalConfig.fuentesPorSocio[socio]) || FUENTES_CAPITAL[0];
+}
+
+function renderizarFilasCapitalSocios(){
+  const haySeleccionActiva = filasCapitalSocios.contains(document.activeElement);
+  if (haySeleccionActiva) return; // no pisar lo que el admin está escribiendo
+
+  filasCapitalSocios.innerHTML = SOCIOS_CREDITO.map(function(socio){
+    const limite = obtenerLimiteSocio(socio);
+    const usado = calcularUsadoPorSocio(socio);
+    const disponible = limite - usado;
+    const fuenteActual = obtenerFuenteSocio(socio);
+    const opcionesFuente = FUENTES_CAPITAL.map(function(f){
+      return '<option value="' + f + '"' + (f === fuenteActual ? ' selected' : '') + '>' + f + '</option>';
+    }).join('');
+    return (
+      '<div class="fila-capital-socio">' +
+        '<span class="nombre-socio">' + socio + '</span>' +
+        '<input type="number" min="0" step="0.01" class="input-capital-socio" data-socio="' + socio + '" value="' + limite + '">' +
+        '<select class="select-fuente-socio" data-socio="' + socio + '">' + opcionesFuente + '</select>' +
+        '<span class="detalle-socio">Usado: ' + formatearPrecio(usado) + ' · Disponible: ' + formatearPrecio(disponible) + '</span>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+function calcularCapitalPorFuente(){
+  const totales = {};
+  FUENTES_CAPITAL.forEach(function(f){ totales[f] = 0; });
+  SOCIOS_CREDITO.forEach(function(socio){
+    const fuente = obtenerFuenteSocio(socio);
+    totales[fuente] = (totales[fuente] || 0) + obtenerLimiteSocio(socio);
+  });
+  return totales;
+}
+
+function actualizarPanelCapital(){
+  const limite = calcularLimiteTotalEmpresa();
+  const usado = calcularCapitalUsado();
+  const disponible = limite - usado;
+  const porcentaje = limite > 0 ? (usado / limite) * 100 : 0;
+  const porFuente = calcularCapitalPorFuente();
+  const desgloseFuentes = FUENTES_CAPITAL
+    .filter(function(f){ return porFuente[f] > 0; })
+    .map(function(f){ return f + ': ' + formatearPrecio(porFuente[f]); })
+    .join(' · ') || 'Sin capital registrado todavía';
+
+  resumenCapital.innerHTML =
+    'Límite total de la empresa (suma de los 5 socios): <strong>' + formatearPrecio(limite) + '</strong><br>' +
+    'Capital prestado actualmente (créditos aceptados sin liquidar): <strong>' + formatearPrecio(usado) + '</strong><br>' +
+    'Capital disponible: <strong>' + formatearPrecio(disponible) + '</strong>' + (limite > 0 ? ' (' + porcentaje.toFixed(1) + '% usado)' : '') + '<br>' +
+    'Por línea de crédito: ' + desgloseFuentes + ' <span style="color:#777;">(el de Efectivo es lo que ya no depende de bancos)</span>';
+
+  renderizarFilasCapitalSocios();
+  actualizarEtiquetasDisponibleTodasLasFilas();
+  actualizarBannerAlertaCapital(limite, usado, porcentaje);
+}
+
+function escucharCapital(){
+  if (dejarDeEscucharCapital) return;
+  dejarDeEscucharCapital = db.collection('configuracion').doc('capital')
+    .onSnapshot(function(doc){
+      capitalConfig = doc.exists ? doc.data() : { limitesPorSocio: {}, fuentesPorSocio: {} };
+      if (!capitalConfig.limitesPorSocio) capitalConfig.limitesPorSocio = {};
+      if (!capitalConfig.fuentesPorSocio) capitalConfig.fuentesPorSocio = {};
+      actualizarPanelCapital();
+    }, function(error){
+      console.error('Error leyendo capital:', error);
+    });
+}
+
+btnGuardarCapitalSocios.addEventListener('click', function(){
+  const nuevosLimites = {};
+  const nuevasFuentes = {};
+  let huboError = false;
+  filasCapitalSocios.querySelectorAll('.input-capital-socio').forEach(function(input){
+    const valor = parseFloat(input.value);
+    if (!(valor >= 0)) huboError = true;
+    nuevosLimites[input.getAttribute('data-socio')] = valor >= 0 ? valor : 0;
+  });
+  filasCapitalSocios.querySelectorAll('.select-fuente-socio').forEach(function(select){
+    nuevasFuentes[select.getAttribute('data-socio')] = select.value;
+  });
+  if (huboError){
+    mensajeLimiteCredito.style.color = 'var(--rojo)';
+    mensajeLimiteCredito.textContent = 'Revisa que todos los montos sean números válidos (0 o más).';
+    return;
+  }
+  btnGuardarCapitalSocios.disabled = true;
+  db.collection('configuracion').doc('capital').set({
+    limitesPorSocio: nuevosLimites,
+    fuentesPorSocio: nuevasFuentes,
+    actualizadoPor: correoAdminActual(),
+    actualizado: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).then(function(){
+    mensajeLimiteCredito.style.color = 'green';
+    mensajeLimiteCredito.textContent = 'Capital de los socios actualizado.';
+  }).catch(function(error){
+    console.error(error);
+    mensajeLimiteCredito.style.color = 'var(--rojo)';
+    mensajeLimiteCredito.textContent = 'Ocurrió un error al guardar el capital.';
+  }).finally(function(){
+    btnGuardarCapitalSocios.disabled = false;
+  });
+});
+
+// =========================================================
+// 6.4) RESUMEN GENERAL DE CRÉDITOS (montos totales y ganancias)
+// =========================================================
+const resumenGeneralPanel = document.getElementById('resumenGeneralPanel');
+
+function calcularResumenGeneral(){
+  const aceptados = creditosCache.filter(function(c){ return (c.estado || 'pendiente') === 'aceptado'; });
+  const totalPrestado = aceptados.reduce(function(s, c){ return s + Number(c.montoCredito || 0); }, 0);
+  const totalConInteres = aceptados.reduce(function(s, c){ return s + Number(c.montoTotal || c.montoCredito || 0); }, 0);
+  const gananciaProyectada = aceptados.reduce(function(s, c){ return s + Number(c.interes || 0); }, 0);
+  const totalCobrado = aceptados.reduce(function(s, c){
+    return s + (c.pagos || []).reduce(function(s2, p){ return s2 + Number(p.monto || 0); }, 0);
+  }, 0);
+  const totalPendiente = aceptados
+    .filter(function(c){ return Number(c.saldoActual || 0) > 0; })
+    .reduce(function(s, c){ return s + Number(c.saldoActual || 0); }, 0);
+  const liquidados = aceptados.filter(function(c){ return Number(c.saldoActual || 0) <= 0; }).length;
+
+  const enMora = aceptados.filter(function(c){ return calcularDiasMora(c) > 0; });
+  const totalGastosCobranza = enMora.reduce(function(s, c){ return s + calcularGastosCobranza(calcularDiasMora(c)); }, 0);
+  const totalMoratorios = enMora.reduce(function(s, c){ return s + calcularMoratorios(c); }, 0);
+
+  const conteoPorEstado = { pendiente: 0, aceptado: 0, rechazado: 0 };
+  creditosCache.forEach(function(c){
+    const e = c.estado || 'pendiente';
+    conteoPorEstado[e] = (conteoPorEstado[e] || 0) + 1;
+  });
+
+  return {
+    totalPrestado: totalPrestado, totalConInteres: totalConInteres, gananciaProyectada: gananciaProyectada,
+    totalCobrado: totalCobrado, totalPendiente: totalPendiente, liquidados: liquidados,
+    totalAceptados: aceptados.length, conteoPorEstado: conteoPorEstado,
+    clientesEnMora: enMora.length, totalGastosCobranza: totalGastosCobranza, totalMoratorios: totalMoratorios
+  };
+}
+
+function renderizarResumenGeneral(){
+  const r = calcularResumenGeneral();
+  resumenGeneralPanel.innerHTML =
+    'Créditos: <strong>' + creditosCache.length + '</strong> en total ' +
+    '(' + r.conteoPorEstado.pendiente + ' pendientes, ' + r.conteoPorEstado.aceptado + ' aceptados, ' + r.conteoPorEstado.rechazado + ' rechazados; de los aceptados, ' + r.liquidados + ' ya están liquidados)<br>' +
+    'Total prestado (sin interés): <strong>' + formatearPrecio(r.totalPrestado) + '</strong><br>' +
+    'Total a cobrar con interés: <strong>' + formatearPrecio(r.totalConInteres) + '</strong><br>' +
+    'Ganancia total proyectada (puros intereses, si se cobra todo): <strong>' + formatearPrecio(r.gananciaProyectada) + '</strong><br>' +
+    'Total cobrado hasta hoy (todos los pagos registrados): <strong>' + formatearPrecio(r.totalCobrado) + '</strong><br>' +
+    'Saldo total pendiente de cobrar: <strong>' + formatearPrecio(r.totalPendiente) + '</strong><br>' +
+    (r.clientesEnMora > 0
+      ? '<span style="color:var(--rojo);">Clientes en mora: <strong>' + r.clientesEnMora + '</strong> · Gastos de cobranza sugeridos: <strong>' + formatearPrecio(r.totalGastosCobranza) + '</strong> · Moratorios sugeridos: <strong>' + formatearPrecio(r.totalMoratorios) + '</strong></span>'
+      : 'Clientes en mora: <strong>0</strong>');
+}
+
 formCredito.addEventListener('submit', function(e){
   e.preventDefault();
   mensajeCredito.textContent = '';
@@ -1096,7 +1622,9 @@ formCredito.addEventListener('submit', function(e){
     numeroPagos: resumen.numeroPagos,
     cuotaSugerida: resumen.cuotaSugerida,
     saldoActual: resumen.montoTotal,
+    capitalPendiente: resumen.monto,
     pagos: [],
+    aportaciones: obtenerAportacionesFormulario(),
     creado: firebase.firestore.FieldValue.serverTimestamp()
   };
 
@@ -1130,6 +1658,7 @@ formCredito.addEventListener('submit', function(e){
       : 'Crédito registrado correctamente como "Pendiente".';
     formCredito.reset();
     actualizarResumenCredito();
+    limpiarFilasAportaciones();
   }).catch(function(error){
     console.error(error);
     mensajeCredito.style.color = 'var(--rojo)';
@@ -1158,11 +1687,28 @@ function renderizarCreditos(){
 
   lista.forEach(function(c){
     const pagos = (c.pagos || []).slice().sort(function(a, b){ return (a.registrado || 0) - (b.registrado || 0); });
-    const ultimaCuota = pagos.length ? pagos[pagos.length - 1] : null;
+    const cuotasPagadas = pagos.filter(function(p){ return (p.tipo || 'cuota') === 'cuota'; });
+    const ultimaCuota = cuotasPagadas.length ? cuotasPagadas[cuotasPagadas.length - 1] : null;
     const estado = c.estado || 'pendiente';
     const liquidado = estado === 'aceptado' && Number(c.saldoActual || 0) <= 0;
     const badgeEstado = '<span class="badge-estado ' + estado + '">' + (etiquetasEstado[estado] || 'Pendiente') + '</span>';
     const tienePlan = c.plazoSemanas && c.frecuenciaPago;
+    const diasMora = calcularDiasMora(c);
+    const badgeMora = diasMora > 0 ? '<span class="badge-mora">' + diasMora + ' día' + (diasMora === 1 ? '' : 's') + ' de mora</span>' : '';
+    const proximoPago = tienePlan ? calcularProximoPago(c) : null;
+    const moraHtml = diasMora > 0
+      ? '<div style="color:var(--rojo);"><strong>Mora:</strong> ' + diasMora + ' día' + (diasMora === 1 ? '' : 's') + ' de atraso</div>'
+      : '';
+    const proximoPagoHtml = proximoPago
+      ? (proximoPago.alCorriente
+          ? '<div><strong>Siguiente pago:</strong> ' + formatearPrecio(proximoPago.cuotaBase) + ' (cuota normal, al corriente)</div>'
+          : '<div style="color:var(--rojo);"><strong>Siguiente pago sugerido (desglosado):</strong><br>' +
+              '&nbsp;&nbsp;Cuota normal: ' + formatearPrecio(proximoPago.cuotaBase) + '<br>' +
+              '&nbsp;&nbsp;Gastos de cobranza (' + formatearPrecio(COSTO_COBRANZA_POR_DIA) + '/día × ' + proximoPago.diasMora + '): ' + formatearPrecio(proximoPago.gastosCobranza) + '<br>' +
+              '&nbsp;&nbsp;Moratorios (' + (Number(TASA_MORATORIA[c.frecuenciaPago] || 0) * 100).toFixed(1) + '% de la cuota por período vencido): ' + formatearPrecio(proximoPago.moratorios) + '<br>' +
+              '&nbsp;&nbsp;<strong>Total a cobrar: ' + formatearPrecio(proximoPago.total) + '</strong>' +
+            '</div>')
+      : '';
 
     let botonesEstado = '';
     if (estado === 'pendiente'){
@@ -1178,24 +1724,48 @@ function renderizarCreditos(){
           '<input type="number" min="0" step="0.01" class="pago-monto" placeholder="Monto del pago" required>' +
           '<input type="date" class="pago-fecha" required>' +
           '<button type="submit" class="btn btn-primario">Registrar pago</button>' +
+        '</form>' +
+        '<form class="form-abono" data-id="' + c.id + '">' +
+          '<input type="number" min="0" step="0.01" class="abono-monto" placeholder="Monto del abono a capital">' +
+          '<input type="date" class="abono-fecha">' +
+          (tienePlan
+            ? '<select class="abono-modo">' +
+                '<option value="ninguno">No recalcular (dejar igual)</option>' +
+                '<option value="menor_pago">Bajar el monto de cada pago</option>' +
+                '<option value="menos_pagos">Reducir el número de pagos restantes</option>' +
+              '</select>'
+            : '') +
+          '<button type="submit" class="btn btn-secundario">Registrar abono a capital</button>' +
         '</form>';
     }
 
     const infoPlanHtml = tienePlan
       ? '<div><strong>Plazo:</strong> ' + c.plazoSemanas + ' semanas (' + ETIQUETAS_FRECUENCIA[c.frecuenciaPago] + '), interés ' + (Number(c.tasaInteres || 0) * 100).toFixed(1) + '%</div>' +
         '<div><strong>Total a pagar (con interés):</strong> ' + formatearPrecio(c.montoTotal) + '</div>' +
-        '<div><strong>Cuota sugerida:</strong> ' + formatearPrecio(c.cuotaSugerida) + ' (' + pagos.length + ' de ' + c.numeroPagos + ' pagos hechos)</div>'
+        '<div><strong>Cuota sugerida:</strong> ' + formatearPrecio(c.cuotaSugerida) + ' (' + cuotasPagadas.length + ' de ' + c.numeroPagos + ' pagos hechos)</div>' +
+        '<div><strong>Capital pendiente:</strong> ' + formatearPrecio(obtenerCapitalPendiente(c)) + ' · <strong>Interés pendiente:</strong> ' + formatearPrecio(obtenerInteresPendiente(c)) + '</div>'
       : '<div class="ayuda" style="margin:0;">Este crédito no tiene plazo/interés definido (se registró antes de esta actualización).</div>';
+
+    const aportacionesHtml = (c.aportaciones && c.aportaciones.length)
+      ? '<div><strong>Capital aportado por:</strong><ul class="lista-aportaciones">' +
+          c.aportaciones.map(function(a){
+            return '<li>' + escaparHtml(a.socio) + ': ' + formatearPrecio(a.monto) + (a.comentario ? ' — ' + escaparHtml(a.comentario) : '') + '</li>';
+          }).join('') +
+        '</ul></div>'
+      : '';
 
     const tarjeta = document.createElement('div');
     tarjeta.className = 'tarjeta-credito';
     tarjeta.innerHTML =
       '<div class="info-credito">' +
-        '<div><strong>Cliente:</strong> ' + escaparHtml(c.cliente) + badgeEstado + (liquidado ? '<span class="badge-liquidado">Liquidado</span>' : '') + '</div>' +
+        '<div><strong>Cliente:</strong> ' + escaparHtml(c.cliente) + badgeEstado + (liquidado ? '<span class="badge-liquidado">Liquidado</span>' : '') + badgeMora + '</div>' +
         '<div><strong>Dirección:</strong> ' + escaparHtml(c.direccion) + '</div>' +
         '<div><strong>Fecha de compra:</strong> ' + formatearFecha(c.fechaCompra) + '</div>' +
         '<div><strong>Monto del crédito (sin interés):</strong> ' + formatearPrecio(c.montoCredito) + '</div>' +
         infoPlanHtml +
+        moraHtml +
+        proximoPagoHtml +
+        aportacionesHtml +
         '<div><strong>Saldo actual:</strong> ' + formatearPrecio(c.saldoActual) + '</div>' +
         '<div><strong>Última cuota:</strong> ' + (ultimaCuota ? (formatearPrecio(ultimaCuota.monto) + ' el ' + formatearFecha(ultimaCuota.fecha)) : 'Sin pagos aún') + '</div>' +
         '<div><strong>Registrado por:</strong> ' + escaparHtml(c.registradoPor || 'Desconocido') + '</div>' +
@@ -1206,9 +1776,152 @@ function renderizarCreditos(){
       formPagoHtml +
       '<button type="button" class="btn btn-secundario" data-ver-historial="' + c.id + '">Ver historial de pagos (' + pagos.length + ')</button>' +
       '<div class="historial-pagos" id="historial-' + c.id + '" style="display:none;">' + construirHistorialPagosHtml(pagos) + '</div>' +
+      '<div class="acciones-credito" style="margin-top:10px;">' +
+        (tienePlan ? '<button type="button" class="btn btn-secundario" data-ver-amortizacion="' + c.id + '">Tabla de amortización</button>' : '') +
+        '<button type="button" class="btn btn-secundario" data-ver-estado-cuenta="' + c.id + '">Exportar estado de cuenta</button>' +
+        (tienePlan ? '<button type="button" class="btn btn-secundario" data-generar-pagare="' + c.id + '">Generar pagaré</button>' : '') +
+      '</div>' +
       '<button type="button" class="btn btn-peligro" data-borrar-credito="' + c.id + '">Eliminar crédito</button>';
     listaCreditos.appendChild(tarjeta);
   });
+}
+
+// =========================================================
+// 6.3) TABLA DE AMORTIZACIÓN Y ESTADO DE CUENTA (para imprimir/PDF)
+// Abren una ventana nueva con el documento listo; el botón de esa
+// ventana usa window.print(), que en cualquier navegador permite
+// "Guardar como PDF" sin necesitar ninguna librería extra.
+// =========================================================
+function abrirVentanaImpresion(titulo, cuerpoHtml){
+  const ventana = window.open('', '_blank');
+  if (!ventana){
+    alert('Tu navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio e inténtalo de nuevo.');
+    return;
+  }
+  ventana.document.write(
+    '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>' + titulo + '</title>' +
+    '<style>' +
+      'body{ font-family:Arial, Helvetica, sans-serif; color:#111; padding:24px; max-width:700px; margin:0 auto; }' +
+      'h1{ font-size:20px; border-bottom:3px solid #d90429; padding-bottom:8px; }' +
+      'h2{ font-size:15px; margin-top:24px; }' +
+      'table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }' +
+      'th, td{ text-align:left; padding:7px 10px; border-bottom:1px solid #ddd; }' +
+      'th{ background:#f2f2f2; }' +
+      '.datos{ font-size:14px; line-height:1.7; margin-top:10px; }' +
+      '.no-imprimir{ margin-top:22px; text-align:center; }' +
+      '.no-imprimir button{ background:#d90429; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-size:14px; cursor:pointer; }' +
+      '@media print{ .no-imprimir{ display:none; } }' +
+    '</style></head><body>' +
+    cuerpoHtml +
+    '<div class="no-imprimir"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div>' +
+    '</body></html>'
+  );
+  ventana.document.close();
+}
+
+function formatearFechaObjeto(fecha){
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const anio = fecha.getFullYear();
+  return dia + '/' + mes + '/' + anio;
+}
+
+function generarFilasAmortizacion(credito){
+  const filas = [];
+  const numeroPagos = credito.numeroPagos || 0;
+  const cuota = credito.cuotaSugerida || 0;
+  const incrementoDias = credito.frecuenciaPago === 'quincenal' ? 14 : 7;
+  const fechaBase = credito.fechaCompra ? new Date(credito.fechaCompra + 'T00:00:00') : new Date();
+  let saldo = credito.montoTotal || 0;
+
+  for (let i = 1; i <= numeroPagos; i++){
+    const fecha = new Date(fechaBase.getTime());
+    fecha.setDate(fecha.getDate() + incrementoDias * i);
+    saldo = Math.max(0, saldo - cuota);
+    filas.push({ numero: i, fecha: fecha, cuota: cuota, saldo: (i === numeroPagos) ? 0 : saldo });
+  }
+  return filas;
+}
+
+function abrirTablaAmortizacion(credito){
+  if (!credito.plazoSemanas || !credito.numeroPagos){
+    alert('Este crédito no tiene un plazo definido, así que no se puede generar una tabla de amortización.');
+    return;
+  }
+  const filas = generarFilasAmortizacion(credito);
+  const filasHtml = filas.map(function(f){
+    return '<tr><td>' + f.numero + '</td><td>' + formatearFechaObjeto(f.fecha) + '</td><td>' + formatearPrecio(f.cuota) + '</td><td>' + formatearPrecio(f.saldo) + '</td></tr>';
+  }).join('');
+
+  const cuerpo =
+    '<h1>Tabla de amortización</h1>' +
+    '<div class="datos">' +
+      '<strong>Cliente:</strong> ' + escaparHtml(credito.cliente) + '<br>' +
+      '<strong>Monto del crédito:</strong> ' + formatearPrecio(credito.montoCredito) + ' + interés (' + (Number(credito.tasaInteres || 0) * 100).toFixed(1) + '%) = <strong>' + formatearPrecio(credito.montoTotal) + '</strong><br>' +
+      '<strong>Plazo:</strong> ' + credito.plazoSemanas + ' semanas, pagos ' + ETIQUETAS_FRECUENCIA[credito.frecuenciaPago] + 's (' + credito.numeroPagos + ' pagos de ' + formatearPrecio(credito.cuotaSugerida) + ')' +
+    '</div>' +
+    '<table><thead><tr><th>#</th><th>Fecha estimada</th><th>Cuota</th><th>Saldo restante</th></tr></thead><tbody>' + filasHtml + '</tbody></table>' +
+    '<p style="font-size:11px; color:#777; margin-top:14px;">Esta tabla es una proyección con fechas estimadas a partir de la fecha de compra. Las fechas y montos reales de pago pueden variar según lo que realmente pague el cliente.</p>';
+
+  abrirVentanaImpresion('Tabla de amortización - ' + credito.cliente, cuerpo);
+}
+
+function abrirEstadoCuenta(credito){
+  const pagos = (credito.pagos || []).slice().sort(function(a, b){ return (a.registrado || 0) - (b.registrado || 0); });
+  const filasPagosHtml = pagos.length
+    ? pagos.map(function(p, i){ return '<tr><td>' + (i + 1) + '</td><td>' + formatearFecha(p.fecha) + '</td><td>' + formatearPrecio(p.monto) + '</td><td>' + (ETIQUETAS_TIPO_PAGO[p.tipo] || ETIQUETAS_TIPO_PAGO.cuota) + '</td></tr>'; }).join('')
+    : '<tr><td colspan="4" style="text-align:center; color:#777;">Sin pagos registrados todavía</td></tr>';
+
+  const tienePlan = credito.plazoSemanas && credito.frecuenciaPago;
+
+  const cuerpo =
+    '<h1>Estado de cuenta</h1>' +
+    '<div class="datos">' +
+      '<strong>Cliente:</strong> ' + escaparHtml(credito.cliente) + '<br>' +
+      '<strong>Dirección:</strong> ' + escaparHtml(credito.direccion) + '<br>' +
+      '<strong>Fecha de compra:</strong> ' + formatearFecha(credito.fechaCompra) + '<br>' +
+      '<strong>Monto del crédito (sin interés):</strong> ' + formatearPrecio(credito.montoCredito) + '<br>' +
+      (tienePlan ? '<strong>Total a pagar (con interés):</strong> ' + formatearPrecio(credito.montoTotal) + ' a ' + credito.numeroPagos + ' pagos ' + ETIQUETAS_FRECUENCIA[credito.frecuenciaPago] + 's<br>' : '') +
+      (tienePlan ? '<strong>Capital pendiente:</strong> ' + formatearPrecio(obtenerCapitalPendiente(credito)) + ' · <strong>Interés pendiente:</strong> ' + formatearPrecio(obtenerInteresPendiente(credito)) + '<br>' : '') +
+      '<strong>Saldo actual:</strong> ' + formatearPrecio(credito.saldoActual) +
+    '</div>' +
+    '<h2>Historial de pagos</h2>' +
+    '<table><thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Tipo</th></tr></thead><tbody>' + filasPagosHtml + '</tbody></table>';
+
+  abrirVentanaImpresion('Estado de cuenta - ' + credito.cliente, cuerpo);
+}
+
+function abrirPagare(credito){
+  if (!credito.plazoSemanas || !credito.frecuenciaPago || !credito.cuotaSugerida){
+    alert('Este crédito no tiene un plazo definido, así que no se puede generar un pagaré con pagos periódicos.');
+    return;
+  }
+  const montoInput = prompt('Monto de cada pago ' + ETIQUETAS_FRECUENCIA[credito.frecuenciaPago] + ' (puedes ajustarlo si es necesario):', credito.cuotaSugerida);
+  if (montoInput === null) return;
+  const montoPago = parseFloat(montoInput);
+  if (!(montoPago > 0)){
+    alert('Escribe un monto de pago válido.');
+    return;
+  }
+
+  const numeroPagos = credito.numeroPagos || Math.ceil(Number(credito.montoTotal || 0) / montoPago);
+  const fechaEmision = formatearFechaObjeto(new Date());
+
+  const cuerpo =
+    '<h1>Pagaré</h1>' +
+    '<div class="datos">' +
+      'Lugar y fecha: ______________________, a ' + fechaEmision + '<br><br>' +
+      'Por este pagaré, yo <strong>' + escaparHtml(credito.cliente) + '</strong>, con domicilio en ' + escaparHtml(credito.direccion || '_____________________') + ', debo y pagaré incondicionalmente a la orden de<br>' +
+      '<div style="border-bottom:1px solid #333; height:26px; margin:6px 0 14px;"></div>' +
+      'la cantidad de <strong>' + formatearPrecio(credito.montoTotal) + '</strong> (moneda nacional), mediante <strong>' + numeroPagos + '</strong> pagos ' + ETIQUETAS_FRECUENCIA[credito.frecuenciaPago] + 's de <strong>' + formatearPrecio(montoPago) + '</strong> cada uno, a partir de la fecha de compra (' + formatearFecha(credito.fechaCompra) + ').<br><br>' +
+      'En caso de no cubrir cualquiera de los pagos en la fecha acordada, acepto que se generen gastos de cobranza de ' + formatearPrecio(COSTO_COBRANZA_POR_DIA) + ' por cada día de atraso, además de los intereses moratorios que correspondan.' +
+    '</div>' +
+    '<div style="margin-top:60px; display:flex; justify-content:space-between;">' +
+      '<div style="text-align:center;">_____________________________<br>Firma del cliente<br>' + escaparHtml(credito.cliente) + '</div>' +
+      '<div style="text-align:center;">_____________________________<br>Firma del acreedor</div>' +
+    '</div>';
+
+  abrirVentanaImpresion('Pagaré - ' + credito.cliente, cuerpo);
 }
 
 function construirHistorialPagosHtml(pagos){
@@ -1222,10 +1935,11 @@ function construirHistorialPagosHtml(pagos){
         '<td>' + (indice + 1) + '</td>' +
         '<td>' + formatearFecha(p.fecha) + '</td>' +
         '<td>' + formatearPrecio(p.monto) + '</td>' +
+        '<td>' + (ETIQUETAS_TIPO_PAGO[p.tipo] || ETIQUETAS_TIPO_PAGO.cuota) + '</td>' +
         '<td>' + escaparHtml(p.registradoPor || 'Desconocido') + '</td>' +
       '</tr>';
   });
-  return '<table><thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Registrado por</th></tr></thead><tbody>' + filas + '</tbody></table>';
+  return '<table><thead><tr><th>#</th><th>Fecha</th><th>Monto</th><th>Tipo</th><th>Registrado por</th></tr></thead><tbody>' + filas + '</tbody></table>';
 }
 
 document.querySelectorAll('.filtro-btn').forEach(function(boton){
@@ -1246,6 +1960,8 @@ function escucharCreditos(){
         creditosCache.push(Object.assign({ id: doc.id }, doc.data()));
       });
       renderizarCreditos();
+      actualizarPanelCapital();
+      renderizarResumenGeneral();
     }, function(error){
       console.error('Error leyendo créditos:', error);
     });
@@ -1253,6 +1969,70 @@ function escucharCreditos(){
 
 listaCreditos.addEventListener('submit', function(e){
   const formPago = e.target.closest('.form-pago');
+  const formAbono = e.target.closest('.form-abono');
+
+  if (formAbono){
+    e.preventDefault();
+    const id = formAbono.getAttribute('data-id');
+    const monto = parseFloat(formAbono.querySelector('.abono-monto').value);
+    const fecha = formAbono.querySelector('.abono-fecha').value;
+
+    if (!(monto > 0) || !fecha){
+      alert('Escribe un monto de abono válido y una fecha.');
+      return;
+    }
+
+    const credito = creditosCache.find(function(c){ return c.id === id; });
+    const tasa = credito ? Number(credito.tasaInteres || 0) : 0;
+    // El abono se aplica directo al capital; como el interés de este crédito
+    // es un porcentaje fijo del capital, al bajar el capital se "perdona"
+    // también el interés que le correspondía a esa parte ya pagada.
+    const bajaSaldo = tasa ? monto * (1 + tasa) : monto;
+    const bajaCapital = monto;
+
+    // Después del abono, el admin puede elegir cómo se acomoda lo que falta:
+    // dejar todo igual, bajar el monto de cada pago (mismo número de pagos
+    // restantes) o reducir cuántos pagos le quedan (mismo monto por pago).
+    const selectModo = formAbono.querySelector('.abono-modo');
+    const modo = selectModo ? selectModo.value : 'ninguno';
+    const datosAbono = {
+      saldoActual: firebase.firestore.FieldValue.increment(-bajaSaldo),
+      capitalPendiente: firebase.firestore.FieldValue.increment(-bajaCapital),
+      pagos: firebase.firestore.FieldValue.arrayUnion({ fecha: fecha, monto: monto, registradoPor: correoAdminActual(), registrado: Date.now(), tipo: 'abono' })
+    };
+
+    if (credito && modo !== 'ninguno' && credito.numeroPagos && credito.cuotaSugerida){
+      const saldoProyectado = Math.max(0, Number(credito.saldoActual || 0) - bajaSaldo);
+      const cuotasPagadas = (credito.pagos || []).filter(function(p){ return (p.tipo || 'cuota') === 'cuota'; }).length;
+      const pagosRestantesActuales = Math.max(1, credito.numeroPagos - cuotasPagadas);
+
+      if (modo === 'menor_pago'){
+        // Mismos pagos que le faltaban, pero cada uno más chico.
+        datosAbono.cuotaSugerida = saldoProyectado > 0
+          ? Math.round((saldoProyectado / pagosRestantesActuales) * 100) / 100
+          : 0;
+      } else if (modo === 'menos_pagos'){
+        // Mismo monto por pago, pero le quedan menos pagos.
+        const nuevosPagosRestantes = saldoProyectado > 0
+          ? Math.max(1, Math.ceil(saldoProyectado / credito.cuotaSugerida))
+          : 0;
+        datosAbono.numeroPagos = cuotasPagadas + nuevosPagosRestantes;
+      }
+    }
+
+    const botonAbono = formAbono.querySelector('button');
+    botonAbono.disabled = true;
+    db.collection('creditos').doc(id).update(datosAbono).then(function(){
+      formAbono.reset();
+    }).catch(function(error){
+      console.error(error);
+      alert('Ocurrió un error al registrar el abono.');
+    }).finally(function(){
+      botonAbono.disabled = false;
+    });
+    return;
+  }
+
   if (!formPago) return;
   e.preventDefault();
 
@@ -1265,12 +2045,21 @@ listaCreditos.addEventListener('submit', function(e){
     return;
   }
 
+  const creditoPago = creditosCache.find(function(c){ return c.id === id; });
+  const tasaPago = creditoPago ? Number(creditoPago.tasaInteres || 0) : 0;
+  const bajaCapitalPago = tasaPago ? monto / (1 + tasaPago) : 0;
+
+  const datosActualizacion = {
+    saldoActual: firebase.firestore.FieldValue.increment(-monto),
+    pagos: firebase.firestore.FieldValue.arrayUnion({ fecha: fecha, monto: monto, registradoPor: correoAdminActual(), registrado: Date.now(), tipo: 'cuota' })
+  };
+  if (bajaCapitalPago){
+    datosActualizacion.capitalPendiente = firebase.firestore.FieldValue.increment(-bajaCapitalPago);
+  }
+
   const botonPago = formPago.querySelector('button');
   botonPago.disabled = true;
-  db.collection('creditos').doc(id).update({
-    saldoActual: firebase.firestore.FieldValue.increment(-monto),
-    pagos: firebase.firestore.FieldValue.arrayUnion({ fecha: fecha, monto: monto, registradoPor: correoAdminActual(), registrado: Date.now() })
-  }).then(function(){
+  db.collection('creditos').doc(id).update(datosActualizacion).then(function(){
     formPago.reset();
   }).catch(function(error){
     console.error(error);
@@ -1285,6 +2074,9 @@ listaCreditos.addEventListener('click', function(e){
   const idRechazar = e.target.getAttribute('data-rechazar');
   const idBorrar = e.target.getAttribute('data-borrar-credito');
   const idHistorial = e.target.getAttribute('data-ver-historial');
+  const idAmortizacion = e.target.getAttribute('data-ver-amortizacion');
+  const idEstadoCuenta = e.target.getAttribute('data-ver-estado-cuenta');
+  const idPagare = e.target.getAttribute('data-generar-pagare');
 
   if (idHistorial){
     const panel = document.getElementById('historial-' + idHistorial);
@@ -1293,6 +2085,24 @@ listaCreditos.addEventListener('click', function(e){
       panel.style.display = abierto ? 'none' : 'block';
       e.target.textContent = e.target.textContent.replace(abierto ? 'Ocultar' : 'Ver', abierto ? 'Ver' : 'Ocultar');
     }
+    return;
+  }
+
+  if (idAmortizacion){
+    const credito = creditosCache.find(function(c){ return c.id === idAmortizacion; });
+    if (credito) abrirTablaAmortizacion(credito);
+    return;
+  }
+
+  if (idEstadoCuenta){
+    const credito = creditosCache.find(function(c){ return c.id === idEstadoCuenta; });
+    if (credito) abrirEstadoCuenta(credito);
+    return;
+  }
+
+  if (idPagare){
+    const credito = creditosCache.find(function(c){ return c.id === idPagare; });
+    if (credito) abrirPagare(credito);
     return;
   }
 
@@ -1349,6 +2159,9 @@ const btnCerrarChat = document.getElementById('btnCerrarChat');
 const btnCrearCreditoDesdeChat = document.getElementById('btnCrearCreditoDesdeChat');
 const btnVolverChats = document.getElementById('btnVolverChats');
 const tabBotonChats = document.getElementById('tabBotonChats');
+const btnToggleOpcionesAvanzadasChat = document.getElementById('btnToggleOpcionesAvanzadasChat');
+const panelOpcionesAvanzadasChat = document.getElementById('panelOpcionesAvanzadasChat');
+const btnEliminarChat = document.getElementById('btnEliminarChat');
 
 let dejarDeEscucharChats = null;
 let dejarDeEscucharChatActual = null;
@@ -1442,6 +2255,8 @@ function abrirDetalleChat(id){
   panelDetalleChat.style.display = 'block';
   tituloChatDetalle.textContent = 'Conversación con ' + (chatAbiertoData ? chatAbiertoData.nombreCliente : '');
   actualizarInfoChatDetalle();
+  panelOpcionesAvanzadasChat.style.display = 'none';
+  btnToggleOpcionesAvanzadasChat.textContent = 'Mostrar opciones avanzadas';
 
   if (dejarDeEscucharMensajesChat){ dejarDeEscucharMensajesChat(); dejarDeEscucharMensajesChat = null; }
   dejarDeEscucharMensajesChat = db.collection('chats').doc(id).collection('mensajes')
@@ -1498,6 +2313,34 @@ btnCerrarChat.addEventListener('click', function(){
   });
 });
 
+btnToggleOpcionesAvanzadasChat.addEventListener('click', function(){
+  const abierto = panelOpcionesAvanzadasChat.style.display !== 'none';
+  panelOpcionesAvanzadasChat.style.display = abierto ? 'none' : 'block';
+  btnToggleOpcionesAvanzadasChat.textContent = abierto ? 'Mostrar opciones avanzadas' : 'Ocultar opciones avanzadas';
+});
+
+btnEliminarChat.addEventListener('click', function(){
+  if (!chatAbiertoId) return;
+  if (!confirm('¿Seguro que quieres eliminar ESTA conversación por completo? Esta acción no se puede deshacer.')) return;
+  if (!confirm('Confirma una vez más: se borrarán todos los mensajes de esta conversación para siempre.')) return;
+
+  const idChat = chatAbiertoId;
+  btnEliminarChat.disabled = true;
+  db.collection('chats').doc(idChat).collection('mensajes').get().then(function(snapshot){
+    const lote = db.batch();
+    snapshot.forEach(function(doc){ lote.delete(doc.ref); });
+    lote.delete(db.collection('chats').doc(idChat));
+    return lote.commit();
+  }).then(function(){
+    btnVolverChats.click();
+  }).catch(function(error){
+    console.error(error);
+    alert('Ocurrió un error al eliminar la conversación.');
+  }).finally(function(){
+    btnEliminarChat.disabled = false;
+  });
+});
+
 formRespuestaChat.addEventListener('submit', function(e){
   e.preventDefault();
   if (!chatAbiertoId) return;
@@ -1532,6 +2375,7 @@ btnCrearCreditoDesdeChat.addEventListener('click', function(){
   campoPlazoCredito.value = '24';
   campoFrecuenciaCredito.value = 'semanal';
   actualizarResumenCredito();
+  limpiarFilasAportaciones();
   mensajeCredito.style.color = 'var(--negro)';
   mensajeCredito.textContent = 'Completa la dirección, el monto y el plazo, y guarda: este crédito se creará ya como "Aceptado", ligado a la conversación con ' + (chatAbiertoData.nombreCliente || 'el cliente') + '.';
   window.scrollTo({ top: 0, behavior: 'smooth' });
