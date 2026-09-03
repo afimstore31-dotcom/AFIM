@@ -26,6 +26,10 @@
     padding:20px 24px;
     text-align:center;
   }
+  header img.logo-tienda{
+    height:64px;
+    margin-bottom:6px;
+  }
   header h1{
     margin:0 0 4px;
     font-size:26px;
@@ -36,6 +40,33 @@
     color:#ccc;
     font-size:14px;
   }
+
+  #seccionPrestamo{
+    background:var(--rojo);
+    color:var(--blanco);
+    padding:16px 20px;
+    text-align:center;
+  }
+  #seccionPrestamo h2{
+    margin:0 0 4px;
+    font-size:17px;
+  }
+  #seccionPrestamo p{
+    margin:0 0 10px;
+    font-size:13px;
+    color:#ffe1e6;
+  }
+  #botonAbrirPrestamo{
+    background:var(--blanco);
+    color:var(--rojo);
+    border:none;
+    padding:10px 22px;
+    border-radius:20px;
+    font-size:14px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  #botonAbrirPrestamo:hover{ background:#ffe1e6; }
 
   #filtros{
     display:flex;
@@ -448,14 +479,120 @@
     color:#999;
     align-self:flex-start;
   }
+
+  /* Cotizador / solicitud de préstamo en efectivo */
+  #fondoOscuroPrestamo{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:10;
+  }
+  #panelPrestamo{
+    display:none;
+    position:fixed;
+    top:0; right:0;
+    width:100%;
+    max-width:380px;
+    height:100%;
+    background:var(--blanco);
+    z-index:11;
+    box-shadow:-4px 0 16px rgba(0,0,0,0.2);
+    flex-direction:column;
+  }
+  #panelPrestamo .cabecera-carrito{
+    background:var(--negro);
+    color:var(--blanco);
+    padding:16px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  #panelPrestamo .cabecera-carrito button{
+    background:none;
+    border:none;
+    color:var(--blanco);
+    font-size:20px;
+    cursor:pointer;
+  }
+  #cuerpoPrestamo{
+    flex:1;
+    overflow-y:auto;
+    padding:16px 20px;
+  }
+  .campo-cotizador{ margin-bottom:12px; }
+  .campo-cotizador label{
+    display:block;
+    font-size:12px;
+    font-weight:bold;
+    margin-bottom:4px;
+  }
+  .campo-cotizador input, .campo-cotizador select{
+    width:100%;
+    padding:9px;
+    border:1px solid var(--gris-borde);
+    border-radius:6px;
+    font-size:14px;
+    font-family:inherit;
+  }
+  #resumenCotizador{
+    background:var(--gris-claro);
+    border:1px solid var(--gris-borde);
+    border-radius:8px;
+    padding:12px 14px;
+    font-size:13px;
+    line-height:1.7;
+    margin-bottom:14px;
+  }
+  #resumenCotizador strong, #resumenCotizacionAceptada strong{ color:var(--rojo); }
+  #resumenCotizacionAceptada{
+    background:var(--gris-claro);
+    border:1px solid var(--gris-borde);
+    border-radius:8px;
+    padding:12px 14px;
+    font-size:13px;
+    line-height:1.7;
+    margin-bottom:10px;
+  }
+  #botonAceptarCotizacion, #botonHablarAsesor{
+    width:100%;
+    background:var(--rojo);
+    color:var(--blanco);
+    padding:13px;
+    border:none;
+    border-radius:6px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  #botonAceptarCotizacion:hover, #botonHablarAsesor:hover{ background:var(--rojo-oscuro); }
+  #botonCambiarCotizacion{
+    display:block;
+    width:100%;
+    margin-top:10px;
+    background:none;
+    border:none;
+    text-decoration:underline;
+    cursor:pointer;
+    color:#777;
+    font-size:12px;
+    text-align:center;
+  }
 </style>
 </head>
 <body>
 
 <header>
+  <img src="data:image/png;base64,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" alt="AFIM" class="logo-tienda">
   <h1 id="tituloTienda">Mi Tienda</h1>
   <p>Selecciona tus productos y arma tu pedido</p>
 </header>
+
+<section id="seccionPrestamo">
+  <h2>💵 ¿Necesitas un préstamo en efectivo?</h2>
+  <p>Cotiza tu pago semanal o quincenal y mándanos tu solicitud directo por chat.</p>
+  <button type="button" id="botonAbrirPrestamo">Cotizar y solicitar</button>
+</section>
 
 <div id="filtros"></div>
 
@@ -478,6 +615,45 @@
   <div id="resumenCarrito">
     <div class="total"><span>Total</span><span id="totalCarrito">$0.00</span></div>
     <button id="botonFinalizar">Finalizar pedido por chat</button>
+  </div>
+</div>
+
+<div id="fondoOscuroPrestamo"></div>
+<div id="panelPrestamo">
+  <div class="cabecera-carrito">
+    <strong>Solicita tu préstamo en efectivo</strong>
+    <button type="button" id="btnCerrarPrestamo">✕</button>
+  </div>
+  <div id="cuerpoPrestamo">
+    <div id="pasoCotizacion">
+      <div class="campo-cotizador">
+        <label>¿Cuánto necesitas? (MXN)</label>
+        <input type="number" id="campoMontoCotizador" min="0" step="0.01" placeholder="Ej. 5000">
+      </div>
+      <div class="campo-cotizador">
+        <label>Plazo</label>
+        <select id="campoPlazoCotizador">
+          <option value="24">24 semanas</option>
+          <option value="36">36 semanas</option>
+          <option value="48">48 semanas</option>
+        </select>
+      </div>
+      <div class="campo-cotizador">
+        <label>¿Cómo prefieres pagar?</label>
+        <select id="campoFrecuenciaCotizador">
+          <option value="semanal">Semanal</option>
+          <option value="quincenal">Quincenal</option>
+        </select>
+      </div>
+      <div id="resumenCotizador">Escribe el monto que necesitas para ver tu cotización.</div>
+      <button type="button" id="botonAceptarCotizacion">Aceptar cotización</button>
+    </div>
+    <div id="pasoAsesor" style="display:none;">
+      <div id="resumenCotizacionAceptada"></div>
+      <p style="font-size:13px; color:#555;">Para continuar y recibir tu dinero, un asesor te va a pedir tus datos y tu número de cuenta para hacer la transferencia.</p>
+      <button type="button" id="botonHablarAsesor">Hablar con un asesor</button>
+      <button type="button" id="botonCambiarCotizacion">← Cambiar cotización</button>
+    </div>
   </div>
 </div>
 
@@ -944,6 +1120,10 @@ btnIniciarChat.addEventListener('click', function(){
     chatCliente = { id: ref.id, nombre: nombre, telefono: telefono };
     guardarChatLocal();
     mostrarConversacion();
+    if (cotizacionPendienteEtiquetar){
+      etiquetarChatComoSolicitudPrestamo(ref.id, cotizacionPendienteEtiquetar);
+      cotizacionPendienteEtiquetar = null;
+    }
     if (mensajePendienteAlAbrir){
       enviarMensajeCliente(mensajePendienteAlAbrir);
       mensajePendienteAlAbrir = null;
@@ -1034,6 +1214,160 @@ btnNuevaConversacion.addEventListener('click', function(){
   chatCliente = null;
   guardarChatLocal();
   mostrarFormularioInicio();
+});
+
+// =========================================================
+// 9) COTIZADOR Y SOLICITUD DE PRÉSTAMO EN EFECTIVO
+// Usa los mismos plazos, tasas y frecuencias que el módulo de
+// créditos de admin.html, solo para calcular una cotización
+// estimada. No crea ningún crédito por sí mismo: al solicitar, se
+// manda un mensaje con el resumen por el chat de la tienda, y ya
+// desde admin.html se da de alta el crédito como siempre.
+// =========================================================
+const PLAZOS_CREDITO_TIENDA = { 24: 0.288, 36: 0.40, 48: 0.50 };
+const ETIQUETAS_FRECUENCIA_TIENDA = { semanal: 'semanal', quincenal: 'quincenal' };
+
+const fondoOscuroPrestamo = document.getElementById('fondoOscuroPrestamo');
+const panelPrestamo = document.getElementById('panelPrestamo');
+const botonAbrirPrestamo = document.getElementById('botonAbrirPrestamo');
+const btnCerrarPrestamo = document.getElementById('btnCerrarPrestamo');
+const campoMontoCotizador = document.getElementById('campoMontoCotizador');
+const campoPlazoCotizador = document.getElementById('campoPlazoCotizador');
+const campoFrecuenciaCotizador = document.getElementById('campoFrecuenciaCotizador');
+const resumenCotizador = document.getElementById('resumenCotizador');
+const pasoCotizacion = document.getElementById('pasoCotizacion');
+const pasoAsesor = document.getElementById('pasoAsesor');
+const resumenCotizacionAceptada = document.getElementById('resumenCotizacionAceptada');
+const botonAceptarCotizacion = document.getElementById('botonAceptarCotizacion');
+const botonCambiarCotizacion = document.getElementById('botonCambiarCotizacion');
+const botonHablarAsesor = document.getElementById('botonHablarAsesor');
+
+let cotizacionAceptadaActual = null;   // la cotización que el cliente ya aceptó, lista para mandar al asesor
+let cotizacionPendienteEtiquetar = null; // si el chat todavía no existe, se etiqueta en cuanto se cree
+
+function calcularCotizacion(){
+  const monto = parseFloat(campoMontoCotizador.value);
+  const plazoSemanas = parseInt(campoPlazoCotizador.value, 10);
+  const frecuencia = campoFrecuenciaCotizador.value;
+  const tasa = PLAZOS_CREDITO_TIENDA[plazoSemanas];
+
+  if (!(monto > 0) || !tasa) return null;
+
+  const interes = monto * tasa;
+  const montoTotal = monto + interes;
+  const numeroPagos = frecuencia === 'quincenal' ? Math.round(plazoSemanas / 2) : plazoSemanas;
+  const cuotaSugerida = montoTotal / numeroPagos;
+
+  return { monto: monto, plazoSemanas: plazoSemanas, tasa: tasa, frecuencia: frecuencia, interes: interes, montoTotal: montoTotal, numeroPagos: numeroPagos, cuotaSugerida: cuotaSugerida };
+}
+
+function actualizarResumenCotizador(){
+  const r = calcularCotizacion();
+  if (!r){
+    resumenCotizador.textContent = 'Escribe el monto que necesitas para ver tu cotización.';
+    return;
+  }
+  resumenCotizador.innerHTML =
+    'Total a pagar: <strong>' + formatearPrecio(r.montoTotal) + '</strong><br>' +
+    'Número de pagos (' + ETIQUETAS_FRECUENCIA_TIENDA[r.frecuencia] + 's): <strong>' + r.numeroPagos + '</strong><br>' +
+    'Tu pago sería de: <strong>' + formatearPrecio(r.cuotaSugerida) + '</strong> ' + ETIQUETAS_FRECUENCIA_TIENDA[r.frecuencia] + '.';
+}
+
+[campoMontoCotizador, campoPlazoCotizador, campoFrecuenciaCotizador].forEach(function(el){
+  el.addEventListener('input', actualizarResumenCotizador);
+  el.addEventListener('change', actualizarResumenCotizador);
+});
+
+function mostrarPasoCotizacion(){
+  pasoCotizacion.style.display = 'block';
+  pasoAsesor.style.display = 'none';
+}
+function mostrarPasoAsesor(){
+  pasoCotizacion.style.display = 'none';
+  pasoAsesor.style.display = 'block';
+}
+
+function abrirPanelPrestamo(){
+  fondoOscuroPrestamo.style.display = 'block';
+  panelPrestamo.style.display = 'flex';
+  mostrarPasoCotizacion();
+  actualizarResumenCotizador();
+}
+function cerrarPanelPrestamo(){
+  fondoOscuroPrestamo.style.display = 'none';
+  panelPrestamo.style.display = 'none';
+}
+
+botonAbrirPrestamo.addEventListener('click', abrirPanelPrestamo);
+fondoOscuroPrestamo.addEventListener('click', cerrarPanelPrestamo);
+btnCerrarPrestamo.addEventListener('click', cerrarPanelPrestamo);
+
+// Anota en el chat que este cliente ya aceptó una cotización, junto con los
+// datos de esa cotización, para que en admin.html se vea de inmediato (con
+// una etiqueta especial en la lista de chats) y ya no haya que volver a
+// teclear el monto/plazo/frecuencia al dar de alta el crédito.
+function etiquetarChatComoSolicitudPrestamo(idChat, r){
+  if (!idChat || !r) return;
+  db.collection('chats').doc(idChat).set({
+    origenSolicitud: 'prestamo_efectivo',
+    cotizacionAceptada: {
+      monto: r.monto,
+      plazoSemanas: r.plazoSemanas,
+      frecuencia: r.frecuencia,
+      tasa: r.tasa,
+      interes: r.interes,
+      montoTotal: r.montoTotal,
+      numeroPagos: r.numeroPagos,
+      cuotaSugerida: r.cuotaSugerida,
+      aceptada: firebase.firestore.FieldValue.serverTimestamp()
+    }
+  }, { merge: true }).catch(function(error){
+    console.error('Error al etiquetar la solicitud de préstamo:', error);
+  });
+}
+
+botonAceptarCotizacion.addEventListener('click', function(){
+  const r = calcularCotizacion();
+  if (!r){
+    alert('Escribe cuánto necesitas para poder cotizar tu préstamo.');
+    return;
+  }
+  cotizacionAceptadaActual = r;
+  resumenCotizacionAceptada.innerHTML =
+    '✅ Aceptaste esta cotización:<br>' +
+    'Préstamo de <strong>' + formatearPrecio(r.monto) + '</strong> a ' + r.plazoSemanas + ' semanas<br>' +
+    'Total a pagar: <strong>' + formatearPrecio(r.montoTotal) + '</strong> en ' + r.numeroPagos + ' pagos ' + ETIQUETAS_FRECUENCIA_TIENDA[r.frecuencia] + 's<br>' +
+    'Tu pago sería de: <strong>' + formatearPrecio(r.cuotaSugerida) + '</strong> ' + ETIQUETAS_FRECUENCIA_TIENDA[r.frecuencia] + '.';
+  mostrarPasoAsesor();
+});
+
+botonCambiarCotizacion.addEventListener('click', function(){
+  cotizacionAceptadaActual = null;
+  mostrarPasoCotizacion();
+});
+
+botonHablarAsesor.addEventListener('click', function(){
+  const r = cotizacionAceptadaActual;
+  if (!r){
+    mostrarPasoCotizacion();
+    return;
+  }
+  const mensaje =
+    'Hola, ya acepté la cotización de mi préstamo en efectivo de ' + formatearPrecio(r.monto) + ', a ' + r.plazoSemanas + ' semanas, con pagos ' + ETIQUETAS_FRECUENCIA_TIENDA[r.frecuencia] + 's.\n\n' +
+    'Cotización aceptada:\n' +
+    '- Total a pagar: ' + formatearPrecio(r.montoTotal) + '\n' +
+    '- Número de pagos: ' + r.numeroPagos + '\n' +
+    '- Pago ' + ETIQUETAS_FRECUENCIA_TIENDA[r.frecuencia] + ': ' + formatearPrecio(r.cuotaSugerida) + '\n\n' +
+    'Quisiera continuar con un asesor para dar mis datos y mi número de cuenta para la transferencia.';
+
+  cerrarPanelPrestamo();
+  if (chatCliente && chatCliente.id){
+    etiquetarChatComoSolicitudPrestamo(chatCliente.id, r);
+  } else {
+    cotizacionPendienteEtiquetar = r;
+  }
+  iniciarOContinuarChat(mensaje);
+  cotizacionAceptadaActual = null;
 });
 </script>
 </body>
