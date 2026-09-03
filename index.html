@@ -578,6 +578,85 @@
     font-size:12px;
     text-align:center;
   }
+
+  .btn-burbuja{
+    display:inline-block;
+    margin-top:6px;
+    background:var(--negro);
+    color:var(--blanco);
+    border:none;
+    padding:6px 12px;
+    border-radius:14px;
+    font-size:12px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  .burbuja.cliente .btn-burbuja{ background:var(--blanco); color:var(--rojo); }
+
+  /* Firma digital del pagaré */
+  #fondoOscuroFirma{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    z-index:12;
+  }
+  #panelFirma{
+    display:none;
+    position:fixed;
+    top:50%; left:50%;
+    transform:translate(-50%, -50%);
+    width:92%;
+    max-width:420px;
+    background:var(--blanco);
+    border-radius:10px;
+    z-index:13;
+    overflow:hidden;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  }
+  #panelFirma .cabecera-carrito{
+    background:var(--negro);
+    color:var(--blanco);
+    padding:14px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  #panelFirma .cabecera-carrito button{
+    background:none;
+    border:none;
+    color:var(--blanco);
+    font-size:20px;
+    cursor:pointer;
+  }
+  #cuerpoFirma{ padding:16px 18px; }
+  #cuerpoFirma p{ font-size:12px; color:#555; margin:0 0 10px; }
+  #canvasFirma{
+    width:100%;
+    height:160px;
+    border:2px dashed var(--gris-borde);
+    border-radius:8px;
+    background:var(--gris-claro);
+    touch-action:none;
+    display:block;
+  }
+  .acciones-firma{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+  }
+  .acciones-firma button{
+    flex:1;
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+  #botonLimpiarFirma{ background:var(--blanco); color:var(--negro); border:1px solid var(--negro) !important; }
+  #botonConfirmarFirma{ background:var(--rojo); color:var(--blanco); }
+  #botonConfirmarFirma:hover{ background:var(--rojo-oscuro); }
 </style>
 </head>
 <body>
@@ -686,6 +765,22 @@
   </div>
 </div>
 
+<div id="fondoOscuroFirma"></div>
+<div id="panelFirma">
+  <div class="cabecera-carrito">
+    <strong>Firma tu pagaré</strong>
+    <button type="button" id="btnCerrarFirma">✕</button>
+  </div>
+  <div id="cuerpoFirma">
+    <p>Dibuja tu firma dentro del recuadro con el dedo o el mouse. Al confirmar, tu pagaré queda firmado y disponible para imprimir o guardar.</p>
+    <canvas id="canvasFirma"></canvas>
+    <div class="acciones-firma">
+      <button type="button" id="botonLimpiarFirma">Borrar</button>
+      <button type="button" id="botonConfirmarFirma">Confirmar firma</button>
+    </div>
+  </div>
+</div>
+
 <!-- ======================================================= -->
 <!-- FIREBASE -->
 <!-- ======================================================= -->
@@ -756,6 +851,94 @@ function escaparHtml(texto){
   const div = document.createElement('div');
   div.textContent = texto || '';
   return div.innerHTML;
+}
+
+// =========================================================
+// TABLA DE AMORTIZACIÓN Y PAGARÉ RECIBIDOS POR CHAT
+// El admin puede mandar la tabla de amortización o el pagaré de un
+// crédito ya aceptado directo por este chat. Aquí se muestran, se
+// pueden abrir en una ventana lista para imprimir/guardar como PDF,
+// y en el caso del pagaré, firmarse digitalmente (la firma se manda
+// como un mensaje nuevo, referenciando al pagaré original).
+// =========================================================
+function formatearFecha(fechaTexto){
+  if (!fechaTexto) return 'Sin fecha';
+  const partes = fechaTexto.split('-');
+  if (partes.length !== 3) return fechaTexto;
+  return partes[2] + '/' + partes[1] + '/' + partes[0];
+}
+function formatearFechaObjeto(fecha){
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const anio = fecha.getFullYear();
+  return dia + '/' + mes + '/' + anio;
+}
+
+function abrirVentanaImpresion(titulo, cuerpoHtml){
+  const ventana = window.open('', '_blank');
+  if (!ventana){
+    alert('Tu navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio e inténtalo de nuevo.');
+    return;
+  }
+  ventana.document.write(
+    '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>' + titulo + '</title>' +
+    '<style>' +
+      'body{ font-family:Arial, Helvetica, sans-serif; color:#111; padding:24px; max-width:700px; margin:0 auto; }' +
+      'h1{ font-size:20px; border-bottom:3px solid #d90429; padding-bottom:8px; }' +
+      'table{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }' +
+      'th, td{ text-align:left; padding:7px 10px; border-bottom:1px solid #ddd; }' +
+      'th{ background:#f2f2f2; }' +
+      '.datos{ font-size:14px; line-height:1.7; margin-top:10px; }' +
+      '.no-imprimir{ margin-top:22px; text-align:center; }' +
+      '.no-imprimir button{ background:#d90429; color:#fff; border:none; padding:10px 20px; border-radius:6px; font-size:14px; cursor:pointer; }' +
+      '@media print{ .no-imprimir{ display:none; } }' +
+    '</style></head><body>' +
+    cuerpoHtml +
+    '<div class="no-imprimir"><button onclick="window.print()">Imprimir / Guardar como PDF</button></div>' +
+    '</body></html>'
+  );
+  ventana.document.close();
+}
+
+function construirCuerpoTablaAmortizacionChat(datos){
+  const filasHtml = (datos.filas || []).map(function(f){
+    return '<tr><td>' + f.numero + '</td><td>' + formatearFechaObjeto(new Date(f.fecha)) + '</td><td>' + formatearPrecio(f.cuota) + '</td><td>' + formatearPrecio(f.saldo) + '</td></tr>';
+  }).join('');
+
+  return (
+    '<h1>Tabla de amortización</h1>' +
+    '<div class="datos">' +
+      '<strong>Cliente:</strong> ' + escaparHtml(datos.cliente) + '<br>' +
+      '<strong>Monto del crédito:</strong> ' + formatearPrecio(datos.montoCredito) + '<br>' +
+      '<strong>Total a pagar:</strong> ' + formatearPrecio(datos.montoTotal) + '<br>' +
+      '<strong>Plazo:</strong> ' + datos.plazoSemanas + ' semanas, pagos ' + ETIQUETAS_FRECUENCIA_TIENDA[datos.frecuenciaPago] + 's (' + datos.numeroPagos + ' pagos de ' + formatearPrecio(datos.cuotaSugerida) + ')' +
+    '</div>' +
+    '<table><thead><tr><th>#</th><th>Fecha estimada</th><th>Cuota</th><th>Saldo restante</th></tr></thead><tbody>' + filasHtml + '</tbody></table>' +
+    '<p style="font-size:11px; color:#777; margin-top:14px;">Esta tabla es una proyección con fechas estimadas a partir de la fecha de compra. Las fechas y montos reales de pago pueden variar según lo que realmente pagues.</p>'
+  );
+}
+
+function construirCuerpoPagareChat(datos, firmaImagenBase64){
+  return (
+    '<h1>Pagaré</h1>' +
+    '<div class="datos">' +
+      'Lugar y fecha: ______________________, a ' + datos.fechaEmision + '<br><br>' +
+      'Por este pagaré, yo <strong>' + escaparHtml(datos.cliente) + '</strong>, con domicilio en ' + escaparHtml(datos.direccion || '_____________________') + ', debo y pagaré incondicionalmente a la orden de<br>' +
+      '<div style="border-bottom:1px solid #333; height:26px; margin:6px 0 14px;"></div>' +
+      'la cantidad de <strong>' + formatearPrecio(datos.montoTotal) + '</strong> (moneda nacional), mediante <strong>' + datos.numeroPagos + '</strong> pagos ' + ETIQUETAS_FRECUENCIA_TIENDA[datos.frecuenciaPago] + 's de <strong>' + formatearPrecio(datos.montoPago) + '</strong> cada uno, a partir de la fecha de compra (' + formatearFecha(datos.fechaCompra) + ').<br><br>' +
+      'En caso de no cubrir cualquiera de los pagos en la fecha acordada, acepto que se generen gastos de cobranza de ' + formatearPrecio(datos.costoCobranzaPorDia != null ? datos.costoCobranzaPorDia : 100) + ' por cada día de atraso, además de los intereses moratorios que correspondan.' +
+    '</div>' +
+    '<div style="margin-top:60px; display:flex; justify-content:space-between; align-items:flex-end;">' +
+      '<div style="text-align:center;">' +
+        (firmaImagenBase64
+          ? '<img src="' + firmaImagenBase64 + '" alt="Firma" style="height:70px; display:block; margin:0 auto 4px;">'
+          : '_____________________________<br>') +
+        'Firma del cliente<br>' + escaparHtml(datos.cliente) +
+      '</div>' +
+      '<div style="text-align:center;">_____________________________<br>Firma del acreedor</div>' +
+    '</div>' +
+    (firmaImagenBase64 ? '<p style="font-size:11px; color:#777; margin-top:18px;">Firmado digitalmente el ' + escaparHtml(datos.fechaFirma || '') + '. Puedes imprimir esta página o guardarla como PDF para tener también una copia física.</p>' : '')
+  );
 }
 
 // =========================================================
@@ -1047,6 +1230,7 @@ let chatEstadoActual = 'abierto';
 let mensajePendienteAlAbrir = null;
 let dejarDeEscucharChatCliente = null;
 let dejarDeEscucharMensajesCliente = null;
+let mensajesCacheCliente = {};
 
 function cargarChatLocal(){
   try{
@@ -1157,12 +1341,36 @@ function escucharChatCliente(){
   dejarDeEscucharMensajesCliente = db.collection('chats').doc(chatCliente.id).collection('mensajes')
     .orderBy('fecha', 'asc')
     .onSnapshot(function(snapshot){
+      const mensajes = [];
+      snapshot.forEach(function(doc){ mensajes.push(Object.assign({ id: doc.id }, doc.data())); });
+
+      const firmasPorMensaje = {};
+      mensajes.forEach(function(m){
+        if (m.tipo === 'firma_pagare' && m.pagareMensajeId) firmasPorMensaje[m.pagareMensajeId] = m;
+      });
+
+      mensajesCacheCliente = {};
+      mensajes.forEach(function(m){ mensajesCacheCliente[m.id] = m; });
+
       mensajesChatCliente.innerHTML = '';
-      snapshot.forEach(function(doc){
-        const m = doc.data();
+      mensajes.forEach(function(m){
         const burbuja = document.createElement('div');
         burbuja.className = 'burbuja ' + (m.autor === 'admin' ? 'admin' : 'cliente');
-        burbuja.innerHTML = (m.autor === 'admin' ? '<span class="autor">' + escaparHtml(m.nombreAutor || 'Atención') + '</span>' : '') + escaparHtml(m.texto || '');
+        let contenido = (m.autor === 'admin' ? '<span class="autor">' + escaparHtml(m.nombreAutor || 'Atención') + '</span>' : '') + escaparHtml(m.texto || '');
+
+        if (m.tipo === 'tabla_amortizacion' && m.datosTabla){
+          contenido += '<br><button type="button" class="btn-burbuja" data-ver-tabla-msg="' + m.id + '">📄 Ver tabla completa</button>';
+        } else if (m.tipo === 'pagare' && m.datosPagare){
+          const firmado = firmasPorMensaje[m.id];
+          contenido += firmado
+            ? '<br>✔ <strong>Ya firmaste este pagaré</strong> · <button type="button" class="btn-burbuja" data-ver-pagare-msg="' + firmado.id + '">📄 Ver pagaré firmado</button>'
+            : '<br><button type="button" class="btn-burbuja" data-firmar-pagare-msg="' + m.id + '">✍️ Firmar pagaré</button> ' +
+              '<button type="button" class="btn-burbuja" data-ver-pagare-msg="' + m.id + '">📄 Ver pagaré</button>';
+        } else if (m.tipo === 'firma_pagare' && m.datosPagare){
+          contenido += '<br><button type="button" class="btn-burbuja" data-ver-pagare-msg="' + m.id + '">📄 Ver pagaré firmado</button>';
+        }
+
+        burbuja.innerHTML = contenido;
         mensajesChatCliente.appendChild(burbuja);
       });
       mensajesChatCliente.scrollTop = mensajesChatCliente.scrollHeight;
@@ -1172,13 +1380,20 @@ function escucharChatCliente(){
 }
 
 function enviarMensajeCliente(texto){
-  if (!chatCliente || !chatCliente.id || !texto) return Promise.resolve();
-  return db.collection('chats').doc(chatCliente.id).collection('mensajes').add({
+  return enviarMensajeEstructuradoCliente({ texto: texto });
+}
+
+// Igual que enviarMensajeCliente, pero permite mandar campos extra
+// (tipo, datosPagare, firmaImagen, etc.) para los mensajes especiales
+// de tabla de amortización y firma de pagaré.
+function enviarMensajeEstructuradoCliente(datosMensaje){
+  if (!chatCliente || !chatCliente.id || !datosMensaje) return Promise.resolve();
+  const mensaje = Object.assign({
     autor: 'cliente',
-    texto: texto,
     nombreAutor: chatCliente.nombre,
     fecha: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
+  }, datosMensaje);
+  return db.collection('chats').doc(chatCliente.id).collection('mensajes').add(mensaje).then(function(){
     const actualizacion = {
       actualizado: firebase.firestore.FieldValue.serverTimestamp(),
       ultimoMensajeDe: 'cliente'
@@ -1190,6 +1405,28 @@ function enviarMensajeCliente(texto){
     return db.collection('chats').doc(chatCliente.id).update(actualizacion);
   });
 }
+
+mensajesChatCliente.addEventListener('click', function(e){
+  const idTablaMsg = e.target.getAttribute('data-ver-tabla-msg');
+  const idPagareMsg = e.target.getAttribute('data-ver-pagare-msg');
+  const idFirmarMsg = e.target.getAttribute('data-firmar-pagare-msg');
+
+  if (idTablaMsg){
+    const m = mensajesCacheCliente[idTablaMsg];
+    if (m && m.datosTabla) abrirVentanaImpresion('Tabla de amortización', construirCuerpoTablaAmortizacionChat(m.datosTabla));
+    return;
+  }
+  if (idPagareMsg){
+    const m = mensajesCacheCliente[idPagareMsg];
+    if (m && m.datosPagare) abrirVentanaImpresion('Pagaré', construirCuerpoPagareChat(m.datosPagare, m.firmaImagen || null));
+    return;
+  }
+  if (idFirmarMsg){
+    const m = mensajesCacheCliente[idFirmarMsg];
+    if (m && m.datosPagare) abrirModalFirma(idFirmarMsg, m.datosPagare);
+    return;
+  }
+});
 
 formEnviarMensajeChat.addEventListener('submit', function(e){
   e.preventDefault();
@@ -1368,6 +1605,116 @@ botonHablarAsesor.addEventListener('click', function(){
   }
   iniciarOContinuarChat(mensaje);
   cotizacionAceptadaActual = null;
+});
+
+// =========================================================
+// 10) FIRMA DIGITAL DEL PAGARÉ
+// Captura la firma en un <canvas> con Pointer Events (funciona con
+// dedo en celular y con mouse en computadora) y la manda como un
+// mensaje nuevo del chat (tipo "firma_pagare"), con una copia de los
+// datos del pagaré para poder imprimirlo después sin depender del
+// mensaje original.
+// =========================================================
+const fondoOscuroFirma = document.getElementById('fondoOscuroFirma');
+const panelFirma = document.getElementById('panelFirma');
+const btnCerrarFirma = document.getElementById('btnCerrarFirma');
+const canvasFirma = document.getElementById('canvasFirma');
+const botonLimpiarFirma = document.getElementById('botonLimpiarFirma');
+const botonConfirmarFirma = document.getElementById('botonConfirmarFirma');
+const ctxFirma = canvasFirma.getContext('2d');
+
+let idMensajePagareAFirmar = null;
+let datosPagareAFirmar = null;
+let dibujandoFirma = false;
+let firmaTieneTrazo = false;
+
+function ajustarTamanoCanvasFirma(){
+  const relacion = window.devicePixelRatio || 1;
+  const rect = canvasFirma.getBoundingClientRect();
+  canvasFirma.width = rect.width * relacion;
+  canvasFirma.height = rect.height * relacion;
+  ctxFirma.scale(relacion, relacion);
+  ctxFirma.lineWidth = 2;
+  ctxFirma.lineCap = 'round';
+  ctxFirma.lineJoin = 'round';
+  ctxFirma.strokeStyle = '#111111';
+}
+
+function limpiarCanvasFirma(){
+  ajustarTamanoCanvasFirma();
+  firmaTieneTrazo = false;
+}
+
+function abrirModalFirma(idMensajePagare, datosPagare){
+  idMensajePagareAFirmar = idMensajePagare;
+  datosPagareAFirmar = datosPagare;
+  fondoOscuroFirma.style.display = 'block';
+  panelFirma.style.display = 'block';
+  setTimeout(limpiarCanvasFirma, 0);
+}
+
+function cerrarModalFirma(){
+  fondoOscuroFirma.style.display = 'none';
+  panelFirma.style.display = 'none';
+  idMensajePagareAFirmar = null;
+  datosPagareAFirmar = null;
+}
+
+function posicionEnCanvas(e){
+  const rect = canvasFirma.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+canvasFirma.addEventListener('pointerdown', function(e){
+  dibujandoFirma = true;
+  firmaTieneTrazo = true;
+  const p = posicionEnCanvas(e);
+  ctxFirma.beginPath();
+  ctxFirma.moveTo(p.x, p.y);
+  canvasFirma.setPointerCapture(e.pointerId);
+});
+canvasFirma.addEventListener('pointermove', function(e){
+  if (!dibujandoFirma) return;
+  const p = posicionEnCanvas(e);
+  ctxFirma.lineTo(p.x, p.y);
+  ctxFirma.stroke();
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(function(evento){
+  canvasFirma.addEventListener(evento, function(){ dibujandoFirma = false; });
+});
+
+fondoOscuroFirma.addEventListener('click', cerrarModalFirma);
+btnCerrarFirma.addEventListener('click', cerrarModalFirma);
+botonLimpiarFirma.addEventListener('click', limpiarCanvasFirma);
+
+botonConfirmarFirma.addEventListener('click', function(){
+  if (!firmaTieneTrazo){
+    alert('Dibuja tu firma dentro del recuadro antes de confirmar.');
+    return;
+  }
+  if (!idMensajePagareAFirmar || !datosPagareAFirmar || !chatCliente || !chatCliente.id){
+    cerrarModalFirma();
+    return;
+  }
+  const firmaImagen = canvasFirma.toDataURL('image/png');
+  const fechaFirma = formatearFechaObjeto(new Date());
+  const datosPagareFirmado = Object.assign({}, datosPagareAFirmar, { fechaFirma: fechaFirma });
+
+  botonConfirmarFirma.disabled = true;
+  enviarMensajeEstructuradoCliente({
+    tipo: 'firma_pagare',
+    texto: 'Firmé mi pagaré digitalmente. ✔',
+    pagareMensajeId: idMensajePagareAFirmar,
+    datosPagare: datosPagareFirmado,
+    firmaImagen: firmaImagen
+  }).then(function(){
+    cerrarModalFirma();
+  }).catch(function(error){
+    console.error(error);
+    alert('Ocurrió un error al guardar tu firma. Intenta de nuevo.');
+  }).finally(function(){
+    botonConfirmarFirma.disabled = false;
+  });
 });
 </script>
 </body>
